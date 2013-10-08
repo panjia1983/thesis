@@ -1,0 +1,35 @@
+%The word “Abstract” should be centered 2? below the top of the page. 
+%Skip one line, then center your name followed by the title of the 
+%thesis/dissertation. Use as many lines as necessary. Centered below the 
+%title include the phrase, in parentheses, “(Under the direction of  
+%_________)” and include the name(s) of the dissertation advisor(s).
+%Skip one line and begin the content of the abstract. It should be 
+%double-spaced and conform to margin guidelines. An abstract should not 
+%exceed 150 words for a thesis and 350 words for a dissertation. The 
+%latter is a requirement of both the Graduate School and UMI's 
+%Dissertation Abstracts International.
+%Because your dissertation abstract will be published, please prepare and 
+%proofread it carefully. Print all symbols and foreign words clearly and 
+%accurately to avoid errors or delays. Make sure that the title given at 
+%the top of the abstract has the same wording as the title shown on your 
+%title page. Avoid mathematical formulas, diagrams, and other 
+%illustrative materials, and only offer the briefest possible description 
+%of your thesis/dissertation and a concise summary of its conclusions. Do 
+%not include lengthy explanations and opinions.
+%The abstract should bear the lower case Roman number ii (if you did not 
+%include a copyright page) or iii (if you include a copyright page).
+\begin{center}
+\vspace*{52pt}
+{\Large \textbf{ABSTRACT}}
+\vspace{11pt}
+\begin{singlespace}
+JIA PAN: Efficient Configuration Space Construction and Optimization\\
+(Under the direction of Dinesh Manocha)
+\end{singlespace}
+\end{center}
+
+Configuration space is an important concept widely used in algorithmic robotics. Many applications in robotics, computer-aided design, and related areas can be reduced to computational problems in terms of configuration space. In this dissertation, we address three main computational challenges related to configuration spaces: 1) how to efficiently compute an approximate representation of high-dimensional configuration spaces; 2) how to efficiently perform geometric, proximity, and motion planning queries in high-dimensional configuration spaces; 3) how to model uncertainty in configuration spaces represented by noisy sensor data.
+
+
+We present new configuration space construction algorithms based on machine learning and geometric approximation techniques. These algorithms perform collision queries on many configuration samples and the results are used as input to compute an approximate representation for the configuration space, which quickly converges to the exact configuration space. We highlight the efficiency of our algorithms for penetration depth computation and faster instance-based motion planning. We also present parallel GPU-based algorithms to accelerate the performance of optimization or search computations in configuration spaces. In particular, we design efficient GPU-based parallel $k$-nearest neighbor and parallel collision detection algorithms and use them to accelerate motion planning. In order to extend configuration space algorithms to handle noisy sensor data arising from real-world robotics applications,
+we model the uncertainty in configuration space by formulating the collision probability between noisy data. We use these algorithms to perform reliable motion planning for the PR2 robot.

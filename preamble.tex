@@ -1,0 +1,310 @@
+% layout
+\usepackage{geometry}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage[subfigure]{tocloft}
+
+% citations
+\usepackage{natbib}
+\usepackage{apalike}
+%\usepackage{etoolbox}
+%\apptocmd{\sloppy}{\hbadness 10000\relax}{}{}
+
+% include citations inline
+\usepackage{bibentry}
+\nobibliography*
+
+% table
+\usepackage{threeparttable}
+\usepackage{multirow}
+
+% figures
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{subfig}
+\usepackage{overpic}
+
+
+% algorithm
+\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage{algorithmic}
+
+% math
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{units}
+\usepackage{array}
+
+% typography
+\usepackage{times}
+\usepackage{microtype}
+\usepackage{textcomp}
+
+% macro support
+\usepackage{xspace}
+\usepackage[table]{xcolor}
+\usepackage{pdflscape}
+\usepackage{rotating}
+
+
+% page floats
+\usepackage{afterpage}
+
+% pdf links
+%\usepackage[hidelinks]{hyperref}
+
+% use proper margins.
+\geometry{letterpaper,left=1.25in,top=1in,right=1.25in,bottom=1in,nohead}
+
+% double-space text
+\doublespacing
+
+% color
+\usepackage{color}
+
+% Center chapter titles, omit page numbers.
+\titleformat{\chapter}[display]{\fillast\bfseries}{\Large\MakeUppercase{\chaptertitlename} \thechapter}{-11pt}{\huge\singlespacing}[\thispagestyle{empty}]
+
+% extend to 2in top margins, leave 22pts = 2x font size after heading
+\titlespacing{\chapter}{0in}{0.62in}{22pt}
+
+% indent paragraphs four spaces throughout the thesis/dissertation.
+\setlength{\parindent}{4ex}
+
+% tweak spacing of paragraph labels.
+\titlespacing{\paragraph}{0in}{0.08in}{0.07in}
+
+% we want numbered subsubsections
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+% we need to double-space between footnotes.
+\setlength{\footnotesep}{13pt}
+
+% we don't want crazy vertical spacing.
+\raggedbottom
+
+% we don't want abandoned words.
+\clubpenalty=10000 
+\widowpenalty=10000
+
+% cite with (name, year)
+\renewcommand{\cite}{\citep}
+
+% common abbreviations
+\newcommand{\eg}{{\it e.g.}\xspace}
+\newcommand{\ie}{{\it i.e.}\xspace}
+\newcommand{\etc}{{\it etc.}\xspace}
+\newcommand{\etal}{\emph{et~al}\mbox{.}\xspace}
+
+\newcommand{\xth}{\ensuremath{^{\text{th}}}\xspace}
+%\newcommand{\fst}{\ensuremath{^{\text{st}}}\xspace}
+
+% common math notation
+\newcommand{\NAT}[0]{\mathbb{N}\xspace}
+\newcommand{\fun}[1]{\mathit{#1}} % typeset as function name
+\newcommand{\setsize}[1]{\left| #1 \right|}
+\newcommand{\setdef}[2]{\left\{ #1 \ \left|\  #2\right.\right\}}
+\newcommand{\dispsum}[0]{\displaystyle\sum}
+
+\newcommand{\defeq}[0]{\triangleq}
+\renewcommand{\mod}{\operatorname{mod}}
+
+% time units
+\newcommand{\mus}[0]{\ensuremath{\mu s}\xspace}
+\newcommand{\us}[0]{\ensuremath{\mu s}}
+\newcommand{\ms}[0]{\ensuremath{\fun{ms}}\xspace}
+
+% algorithm names
+\newcommand{\kwfont}[1]{\textsf{#1}\xspace} %\small
+% variable name
+\newcommand{\var}[1]{\ensuremath{{\fun{#1}}}\xspace} %\small
+
+%http://hstuart.dk/2007/08/03/programming-latex-%E2%80%94-writing-commands/
+\newcommand{\mkkw}[2]{\newcommand{#1}[0]{\kwfont{#2}}}
+
+% fancy symbols and functions
+\newcommand{\Alg}[0]{{\mathcal A}}
+\newcommand{\Test}[0]{{\mathcal T}}
+\newcommand{\Mach}[0]{{\mathcal M}}
+
+\newcommand{\usum}[0]{u_{\mathrm{sum}}}
+\newcommand{\umax}[0]{u_{\mathrm{max}}}
+\newcommand{\umin}[0]{u_{\mathrm{min}}}
+\newcommand{\utop}[0]{u_{\mathrm{top}}}
+
+\newcommand{\esum}[0]{e_{\mathrm{sum}}}
+\newcommand{\emax}[0]{e_{\mathrm{max}}}
+\newcommand{\emin}[0]{e_{\mathrm{min}}}
+\newcommand{\etop}[0]{e_{\mathrm{top}}}
+
+\newcommand{\dsum}[0]{\delta_{\mathrm{sum}}}
+\newcommand{\dmax}[0]{\delta_{\mathrm{max}}}
+\newcommand{\dmin}[0]{\delta_{\mathrm{min}}}
+\newcommand{\dtop}[0]{\delta_{\mathrm{top}}}
+
+\newcommand{\prio}[0]{\mathsf Y}
+\newcommand{\eprio}[0]{\mathsf y}
+
+\newcommand{\Tr}{\operatorname{Tr}}
+
+\newcommand{\TODO}[1]{\textbf{\textcolor{red}{[TODO: #1]}}}
+
+% src code
+\newcommand{\src}[1]{\textsf{\small #1}\xspace}
+
+% references
+\newcommand{\chref}[1]{Chapter~\ref{ch:#1}\xspace}
+\newcommand{\chrefs}[2]{Chapters~\ref{ch:#1} and~\ref{ch:#2}\xspace}
+\newcommand{\secref}[1]{Section~\ref{sec:#1}\xspace}
+\newcommand{\figref}[1]{Figure~\ref{fig:#1}\xspace}
+\newcommand{\figrefi}[2]{Figure~\ref{fig:#1}(#2)\xspace}
+\newcommand{\tabref}[1]{Table~\ref{tab:#1}\xspace}
+\newcommand{\lemref}[1]{Lemma~\ref{lem:#1}\xspace}
+\newcommand{\thmref}[1]{Theorem~\ref{thm:#1}\xspace}
+\newcommand{\defref}[1]{Definition~\ref{def:#1}\xspace}
+\newcommand{\exref}[1]{Example~\ref{ex:#1}\xspace}
+\newcommand{\equref}[1]{Equation~(\ref{eq:#1})\xspace}
+\newcommand{\inequref}[1]{Inequality~(\ref{eq:#1})\xspace}
+\newcommand{\lstref}[1]{Listing~\ref{lst:#1}\xspace}
+\newcommand{\pref}[1]{page~\pageref{p:#1}\xspace}
+
+
+
+
+
+% special footnotes
+% from http://help-csli.stanford.edu/tex/latex-footnotes.shtml
+\long\def\symbolfootnote[#1]#2{\begingroup%
+\def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
+
+% theorems, etc.
+\newtheoremstyle{mylemthm}% hnamei 
+        {6pt}% hSpace abovei 
+        {3pt}% hSpace belowi 
+        {\slshape}% hBody fonti 
+        {}% hIndent amounti1
+        {\bfseries}% hTheorem head fonti 
+        {.}% hPunctuation after theorem headi 
+        {.5em}% hSpace after theorem headi2
+        {}% hTheorem head spec (can be left empty, meaning `normal')i
+
+\theoremstyle{mylemthm}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}{Lemma}[chapter]
+
+\newtheoremstyle{mydef}% hnamei 
+        {3pt}% hSpace abovei 
+        {3pt}% hSpace belowi 
+        {\normalfont}% hBody fonti 
+        {}% hIndent amounti1
+        {\bfseries}% hTheorem head fonti 
+        {.}% hPunctuation after theorem headi 
+        {.5em}% hSpace after theorem headi2
+        {\thmname{#1} \thmnumber{#2}\thmnote{#3}}% hTheorem head spec (can be left empty, meaning `normal')i
+\theoremstyle{mydef}
+
+%% Flush words right at end of paragraph.
+%% From: http://tex.stackexchange.com/questions/16330/hfill-after-linebreak
+\newcommand\rightparend[1]{{%
+      \unskip\nobreak\hfil\penalty50
+      \hskip2em\hbox{}\nobreak\hfil\textbf{#1}%
+      \parfillskip=0pt \finalhyphendemerits=0 \par}}
+
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{xxexample}{Example}[chapter]
+
+\makeatletter
+\renewcommand{\maketag@@@}[1]{\hbox{\m@th\normalsize\normalfont#1}}%
+\makeatother
+
+%% "inherent" from xxexample, but place box at the end of example.
+\newenvironment{example}{
+\begin{xxexample}
+}{
+\rightparend{$\Diamond$}
+\end{xxexample}
+}
+% \qed   \sqbullet \blackdiamond \vartriangleleft
+
+\graphicspath{{figures/}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newcommand{\trace}{\operatorname{Tr}}
+\newcommand{\vectorize}{\operatorname{vec}}
+\newcommand{\sign}{\operatorname{sgn}}
+\newcommand{\cdf}{\operatorname{cdf}}
+\newcommand{\argmax}{\operatorname{argmax}}
+
+
+
+
+\newcommand{\Cfree}{\ensuremath{\mathcal C_{\text{free}}}}
+\newcommand{\Cobs}{\ensuremath{\mathcal C_{\text{obs}}}}
+\newcommand{\Cspace}{\ensuremath{\mathcal C\text{-space}}}
+\newcommand{\Ccont}{\ensuremath{\mathcal C_\text{cont}}}
+
+\newcommand{\Rn}{\ensuremath{\mathbb R^n}}
+\newcommand{\Rsqr}{\ensuremath{\mathbb R^2}}
+\newcommand{\Rcubic}{\ensuremath{\mathbb R^3}}
+\newcommand{\SEcubic}{\ensuremath{\mathbb {SE}(3)}}
+\newcommand{\SEsqr}{\ensuremath{\mathbb {SE}(2)}}
+\newcommand{\q}{\ensuremath{\mathbf q}}
+\newcommand{\x}{\ensuremath{\mathbf x}}
+\newcommand{\knn}{\ensuremath{k\text{-NN}}}
+
+
+\newcommand{\LCS}{\ensuremath{LCS}}
+\newcommand{\LCSa}{\ensuremath{LCS_0}}
+\newcommand{\LCSb}{\ensuremath{LCS_1}}
+\newcommand{\LCSi}{\ensuremath{LCS_i}}
+\newcommand{\LCSiplus}{\ensuremath{LCS_{i+1}}}
+
+
+\newcommand{\qv}{\ensuremath{\mathbf q_v}}
+\newcommand{\qc}{\ensuremath{\mathbf q_c}}
+\newcommand{\qs}{\ensuremath{\mathbf q_s}}
+\newcommand{\qa}{\ensuremath{\mathbf q_a}}
+
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\argmin}{\operatorname{argmin}}
+\newcommand{\PDt}{\ensuremath{PD_t}}
+\newcommand{\PDg}{\ensuremath{PD_g}}
+
+\newcommand{\V}{\ensuremath{V}}
+\newcommand{\SV}{\ensuremath{S}}
+\newcommand{\SVLCSa}{\ensuremath{S_{LCS_0}}}
+\newcommand{\SVLCS}{\ensuremath{S_{LCS}}}
+
+\DeclareMathOperator{\isLeaf}{isLeaf}
+\DeclareMathOperator{\exactIntersect}{exactIntersect}
+\DeclareMathOperator{\overlap}{overlap}
+\DeclareMathOperator{\pop}{pop}
+
+\newcommand{\erf}{\operatornamewithlimits{cdf}}
+\newcommand{\diag}{\operatornamewithlimits{diag}}
+
+\renewcommand{\ttdefault}{lmtt}
+
+
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+

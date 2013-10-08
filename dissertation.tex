@@ -1,0 +1,85 @@
+\documentclass[11pt,letterpaper,twoside]{report}
+\input{preamble}
+\begin{document}
+
+%******************
+% frontmatter pages use two inch top margin
+\newgeometry{left=1.25in,top=2in,right=1.25in,bottom=1in,nohead}
+\pagenumbering{roman}
+
+%title page
+\include{frontmatter/titlepage}
+
+% copyright page (optional)
+\newgeometry{left=1.25in,top=8.33in,right=1.25in,bottom=1in,nohead}
+\include{frontmatter/copyright}
+
+% normal pages from here on out
+\restoregeometry
+
+% abstract
+\include{frontmatter/abstract}
+
+%% dedication, acknowledgements and/or preface (all optional)
+\include{frontmatter/dedication}
+\include{frontmatter/acknowledgements}
+%\include{frontmatter/preface}
+%
+%% table of contents, with page references
+\include{frontmatter/tableofcontents}
+
+%% list of tables, with titles and page references (if applicable)
+\include{frontmatter/listoftables}
+
+%% list of figures or illustrations, with titles and page references (if applicable)
+\include{frontmatter/listoffigures}
+
+%% list of abbreviations (if applicable)
+%\include{frontmatter/listofabbreviations}
+
+% list of symbols (if applicable)
+%\include{frontmatter/listofsymbols}
+%******************
+
+% mainmatter
+\pagenumbering{arabic}
+
+% a chapter
+%\include{mainmatter/introduction}
+%\include{mainmatter/replanning}
+%\include{mainmatter/simulation}
+%\include{mainmatter/lqgdef}
+%\include{mainmatter/conclusion}
+\include{mainmatter/introduction}
+\include{mainmatter/APD}
+\include{mainmatter/IBL}
+\include{mainmatter/GPlanner}
+\include{mainmatter/GCollide}
+\include{mainmatter/GLSH}
+\include{mainmatter/PCollide}
+\include{mainmatter/PCollide2}
+\include{mainmatter/conclusion}
+
+% backmatter
+% an appendix
+%\include{backmatter/appendix}
+
+% bibliography, references, or works cited
+%\include{backmatter/bibliography}
+
+\clearpage
+\phantomsection
+{\def\chapter*#1{} % suppress bibliography header
+\begin{singlespace}
+\addcontentsline{toc}{chapter}{BIBLIOGRAPHY}
+\begin{center}
+\Large \textbf{BIBLIOGRAPHY}
+\vspace{17pt}
+\end{center}
+
+\bibliographystyle{apalike}
+\bibliography{dissertation}
+\end{singlespace}
+}
+
+\end{document}
