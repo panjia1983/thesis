@@ -6,7 +6,7 @@ It is important to compute a representation for configuration space for many app
 
 \subsection{Main Results}
 In this chapter, we present a novel and simple algorithm to approximate high-dimensional configuration space using machine learning techniques. The main idea is to generate samples in the configuration space and compute a function using support vector regression to approximate $\Ccont$. Our algorithm can greatly reduce the number of samples by incremental and active learning techniques.
-This formulation can be used for high dimensional configuration spaces, corresponding to rigid objects with translational motion and/or rotational motion. Our sample generation scheme results in higher convergence and we give bounds on the expected error in our approximation. We also highlight the performance of our algorithm on different high-dimensional benchmarks.
+This formulation can be used for high dimensional configuration spaces, corresponding to rigid objects with translational motion and/or rotational motion. Our sample generation scheme results in higher convergence and we give bounds on the expected error in our approximation. We also evaluate performance of our algorithm on different high-dimensional benchmarks.
 
 Additionally, based on the approximate $\Ccont$ computed offline, we design a new method to efficiently approximate the penetration depth (PD) between two rigid objects, i.e., the minimum amount of motion transformation required to separate two intersecting objects. Our algorithm performs a nearest-neighbor query between a given query configuration and precomputed $\Ccont$ approximation. As compared to prior techniques, our approach is more general and more reliable. And the runtime query has a small a overhead (a few milliseconds) and can be used for interactive applications. In practice, we are able to compute approximate PD with less 2-3\% relative error by using a few thousand samples during the offline $\Ccont$ computation. We also use our PD algorithm to compute collision response between non-convex models in Box2D and Bullet physics engines. As compared to prior global PD algorithms, we observe more than an order of magnitude improvement in runtime performance.
 
@@ -39,8 +39,7 @@ features~\cite{Guendelman:2003:NRB,Redon:2006:AFM,Lien:2009:ASM,Tang:2009:IHD,Ta
 Distance fields are also used for local translational PD
 computation~\cite{Heidelberger04} and can be computed in realtime using GPUs.
 Point-based Minkowski
-sum approximation~\cite{Lien:2008:CMS} can also be used to
-compute global translational PDs.
+sum approximation~\cite{Lien:2008:CMS} can also compute global translational PDs.
 
 Exact generalized PD can be computed by constructing the
 exact contact space and then searching the contact space for the
@@ -147,7 +146,7 @@ predict whether a given configuration $\q$ is collision-free
 small subset of configuration samples used in learning.
 Intuitively, $\SV$ are the samples that are close to $\Ccont$.
 
-There are possible methods that can be used to compute the approximate contact space.
+There are possible methods that can compute the approximate contact space.
 One possible alternative is to use surface fitting techniques to approximate the contact space using an implicit function, but it gets more challenging for high-dimensional spaces (e.g., 6-DOF $\Cspace$). Another possibility is to use regression based learning techniques to approximate the contact space. However, such techniques typically require an improved or continuous approximation of PD values at these samples, which is much harder to compute (as compared to discrete collision queries).
 
 \subsubsection{Nonlinear Classifier based on SVM}
@@ -304,7 +303,7 @@ learning techniques to efficiently compute $\LCSiplus$ from
 $\LCSiplus$. Intuitively, incremental learning utilizes a small set
 of new samples to update $\LCSi$. The decision function of $\LCSi$
 serves as the initial guess for generating a refined result
-$\LCSiplus$. Incremental SVM~\cite{Karasuyama:2009:MID} can be used to update
+$\LCSiplus$. Incremental SVM~\cite{Karasuyama:2009:MID} can update
 the current result generated using SVM; the key is to retain the optimality condition of Equation~\ref{eq:2:svm1} (i.e., the Kuhn-Tucker condition) on all prior samples while adding new samples. This is achieved by adjusting the coefficients $\alpha_i$ and $b$ in Equation~\ref{eq:2:svmf} and by migrating some samples
 in and out of support vector set $\SV$. The coefficient adjustment and the support vector migration are guided by the gradient of the objective function in Equation~\ref{eq:2:svmf}.
 
@@ -349,7 +348,7 @@ predicted by $\LCS$ ($f(\qa)<0$) and its distance to $\LCS$ is
 more than a user-specified error threshold. In this case, we locally refine
 $\LCS$ by incorporating $\qa$ into $\LCS$ using incremental learning (see
 Section~\ref{sec:2:incremental_learning}).
-This local refinement of $\LCS$ improves the query efficiency and the accuracy of PD computation, as highlighted in Equation~\ref{eq:2:Errdef}.
+This local refinement of $\LCS$ improves the query efficiency and the accuracy of PD computation, as shown in Equation~\ref{eq:2:Errdef}.
 
 During each runtime query, we perform an incremental learning step for an inconsistent
 single configuration. As a result, its runtime overhead is $\mathcal O(1)$.
@@ -436,7 +435,7 @@ If the number of samples used in active learning iterations of $\LCS$ computatio
 where $N=\mathcal O(\log(1/(\epsilon \delta))$, then there exists one active learning technique which can guarantee that with probability at least $1-\delta$, the expected error of the $\LCS$ result will satisfy the bound $e_{\text{col}}\leq\epsilon$.
 \end{theorem}
 
-Intuitively, this theorem says that there exists a special active learning technique that can be used to derive these bounds on $\LCS$ approximation. We give a proof of this theorem in the supplemental material based on CAL (Cohn-Atlas-Ladner) algorithm~\cite{Cohn:ML:1994}. This guarantees our $\LCS$ computation to have a bounded error with a high probability, if more than $N=\mathcal O(\log(1/(\epsilon \delta))$ samples are used. However, the CAL active learning algorithm is not practical~\cite{Hanneke:2013} and rather we use a combination of exploration-and-exploitation as the active learning (Section~\ref{sec:2:offline:activelearning}) in our $\LCS$ computation algorithm.
+Intuitively, this theorem says that there exists a special active learning technique that can derive these bounds on $\LCS$ approximation. We give a proof of this theorem in the supplemental material based on CAL (Cohn-Atlas-Ladner) algorithm~\cite{Cohn:ML:1994}. This guarantees our $\LCS$ computation to have a bounded error with a high probability, if more than $N=\mathcal O(\log(1/(\epsilon \delta))$ samples are used. However, the CAL active learning algorithm is not practical~\cite{Hanneke:2013} and rather we use a combination of exploration-and-exploitation as the active learning (Section~\ref{sec:2:offline:activelearning}) in our $\LCS$ computation algorithm.
 
 A lot of applications use exploration-and-exploitation active learning algorithm. In this case, we can expect that the use of exploration-and-exploitation could also result in a bound similar to Theorem~\ref{thm:2:activelearning}, although the exact derivation of such a bound is a good topic for future research.
 
@@ -505,7 +504,7 @@ exact collision query is $T_{col} = O(\log m + \log n)$.
 \subfloat[$\LCS_5, |S|=869$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS5.png}}
 \subfloat[$\LCS_9, |S|=1350$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS10.png}}
 \subfloat[$\LCS_{12}, |S|=1572$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS17.png}}
-\caption[$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon]{$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon. We highlight the number of support vectors corresponding to $\LCSi$. In our benchmarks, the algorithm can compute a good approximation in a few iterations.}
+\caption[$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon]{$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon. We provide the number of support vectors corresponding to $\LCSi$. In our benchmarks, the algorithm can compute a good approximation in a few iterations.}
 \label{fig:2:LCSinActiveLearning3D}
 \end{center}
 \end{figure}
@@ -554,14 +553,14 @@ therefore a small $\SVLCS$ is sufficient to generate a good approximation of $\C
 We also notice that in our benchmarks, where $|S|$ for the teeth model (40K triangles) is comparable or higher than bunnies (70K triangles), dragon (230K triangles), and Buddha (1M triangles) models. Furthermore, we generated different low-polygon count representations of the Buddha models and observed similar performance on all these approximations (see supplementary material).
 In other words, the size of
 $\SVLCS$ depends on the combinatorial complexity of $\Ccont$. Moreover, the size of $\SVLCS$
-can be used to control the tradeoff between the accuracy of PD
+can control the tradeoff between the accuracy of PD
 computation and the query efficiency.
 
 
 
 \section{Implementation and Performance}
 \label{sec:2:result}
-In this section, we  highlight the performance of our algorithm on complex benchmarks and compare it with prior techniques.
+In this section, we evaluate performance of our algorithm on complex benchmarks and compare it with prior techniques.
 We implemented our algorithm using C++ under Visual Studio 2010
 and Windows 7. The two main routines needed during the learning phase are exact collision checking between polygonal models and computing the approximation using support vector machines. At runtime, we need the capability to perform a nearest-neighbor query in the configuration space and to compute a projection using  constrained optimization. We used the OBBTree algorithm~\cite{Gottschalk:1996:OHS} for exact collision detection between polygonal objects.
 We also used a variant of GJK algorithm~\cite{Gino:2001:GDC} to compute translational penetration depth between convex polytopes to compare the performance with prior methods. In our implementation, we have set $\epsilon=2.5\%$ and $\delta=0.01$.

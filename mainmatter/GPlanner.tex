@@ -24,13 +24,13 @@ The performance of the algorithm is governed by the topology of the underlying
 free space as well as the methods used for sample generation and nearest
 neighbor computation. In practice, our algorithm can generate thousands of samples for
 robots with 3 or 6 DOFs and compute the roadmap for these samples at close to interactive rates including construction of all hierarchies.
-It performs no precomputation and is applicable to dynamic scenes, articulated models or non-rigid robots. We highlight its
+It performs no precomputation and is applicable to dynamic scenes, articulated models or non-rigid robots. We evaluate its
 performance on multiple benchmarks on a commodity PC with a NVIDIA GTX 285 GPU and observe a 10-80 times performance improvement over CPU-based implementations.
 
 \subsection{Organization}
 The rest of this chapter is organized as follows. We survey
 related work on real-time motion planning and GPU-based algorithms in Section~\ref{sec:4:related}. Section~\ref{sec:4:overview} gives an overview of our approach and we present parallel algorithms for
-the construction and query phase in Section~\ref{sec:4:algorithm}. We highlight our performance
+the construction and query phase in Section~\ref{sec:4:algorithm}. We evaluate performance
 on different motion planning benchmarks in Section~\ref{sec:4:result} and compare with prior
 methods.
 
@@ -81,7 +81,7 @@ a GPU can be used for real-time motion planning of low DOF robots~\cite{Hoff00,S
 
 \section{Overview}
 \label{sec:4:overview}
-In this section, we highlight some issues in developing parallel motion planning algorithms for current GPU architectures. One of our goals is use sample-based planners that are relatively easy to parallelize and can be used for single-query and multiple-queries .
+In this section, we discuss some issues in developing parallel motion planning algorithms for current GPU architectures. One of our goals is use sample-based planners that are relatively easy to parallelize and can be used for single-query and multiple-queries .
 
 We choose the PRM algorithm as the underlying method for parallel planning, because it is most suitable to exploit the multiple cores and data parallelism on GPUs. The PRM algorithm is composed of several steps and each step performs similar operations on the input samples or the links joining those samples. Many other efficient CPU-based algorithms have also been developed, including RRT~\cite{Kuffner00} and SBL~\cite{SL01}. However, these methods may not be able to exploit the GPU parallelism due for two reasons. Firstly, these methods proceed in an incremental manner in terms of adding new samples to the underlying tree structure. Secondly, the order of adding new samples is critical in terms of how the tree expands.
 
@@ -153,7 +153,7 @@ When using a lazy strategy, we first run BFS for several iterations and find a s
 
 \section{Implementation and Results}
 \label{sec:4:result}
-In this section, we present some details of the implementation and highlight the performance of our algorithm on a set of benchmarks. All the timings reported here were taken on a machine using a Intel Core i7 CPU ($\sim$\$600) at 3.2GHz CPU and 6GB memory. We implemented our algorithms using CUDA on a NVIDIA GTX 285 GPU ($\sim$\$380) with 1GB of video memory.
+In this section, we present some details of the implementation and evaluate the performance of our algorithm on a set of benchmarks. All the timings reported here were taken on a machine using a Intel Core i7 CPU ($\sim$\$600) at 3.2GHz CPU and 6GB memory. We implemented our algorithms using CUDA on a NVIDIA GTX 285 GPU ($\sim$\$380) with 1GB of video memory.
 
 Our algorithm is designed to work well on any massively processor- and data-parallel architecture by using vector parallelism and low synchronization overhead. In this regard, both NVIDIA and ATI (as well as Intel’s Larrabee processor) are relatively similar. We used CUDA since it was the most stable development platform at the moment, but look forward to testing in OpenCL and comparing across architectures.
 
@@ -186,7 +186,7 @@ alpha1.5       & 65.73s  &   2.8s   &    12.86s  &   1.446s      \\ \hline
 \end{tabular}
 \end{small}
 \end{center}
-\caption[Performance comparison between the PRM and RRT implementations in OOPSMP and the GPU-based planner]{The left two columns highlight the implementations of PRM and RRT algorithm in the OOPSMP. The right two columns highlight the performance of our GPU-based algorithms.}\label{tab:4:complexity}
+\caption[Performance comparison between the PRM and RRT implementations in OOPSMP and the GPU-based planner]{The left two columns evaluate the performance of PRM and RRT algorithm in the OOPSMP. The right two columns evaluate the performance of our GPU-based algorithms.}\label{tab:4:complexity}
 \end{table}
 
 \begin{figure}[htb]

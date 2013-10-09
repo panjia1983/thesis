@@ -169,7 +169,7 @@ contained in the environment are not easily separable in the point
 cloud. To extract objects from the point cloud, expensive object
 recognition and reconstruction algorithms, such
 as~\cite{Muja:2011:ICRA}, are necessary. To bypass such difficulties,
-one widely used solution is to discretize the space that contains the points into small axis-aligned cubes and model the sensor data as a collection of boxes with localized points. This representation is referred to as
+one widely-used solution is to discretize the space that contains the points into small axis-aligned cubes and model the sensor data as a collection of boxes with localized points. This representation is referred to as
 a \emph{collision map} in~\cite{Rusu:RPG:2009,Ioan:2010}. After
 converting the sensor data to a set of boxes, the collision or
 distance query between the robot and the environment becomes a query
@@ -446,12 +446,12 @@ pipeline in Figure~\ref{fig:8:pipelines}(a), where octree cells are
 converted into boxes only if their occupancy probability is larger
 than a given threshold.
 
-Similar recursive traversal can be used to handle the distance
+Similar recursive traversal can handle the distance
 query between the robot and sensor data. Moreover, a binary tree
-can also be used to represent other types of data; e.g., a mesh can be
+can also represent other types of data; e.g., a mesh can be
 represented as a binary AABB or OBB tree~\cite{Pan:ICRA:2012} and a
 geometric primitive (e.g., a sphere) can be represented as a binary
-tree with only the root node. As a result, the same recursive formulation can be used to handle the proximity query between the sensor data and
+tree with only the root node. As a result, the same recursive formulation can handle the proximity query between the sensor data and
 either a mesh or a geometric primitive.
 
 

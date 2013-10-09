@@ -11,7 +11,7 @@ Current robot sensors including cameras and LIDAR and new devices such as Kinect
 Moreover, exact collision checking may not be suitable in terms of
 handling uncertainty in perception and control, which also causes uncertainty in collision results.
 For many robotics applications, such as grasping or motion planning, we need to reduce the risk
-of physical contacts between the robot and the environment that may result in damages. Hence, we need to develop methods that tend to minimize the probability of collisions. The point cloud collision/proximity algorithm can also be used to improve many methods' feasibility and robustness in real world. For example, many algorithms in tactile manipulation, e.g.~\cite{anna:2011}, require an exact or approximated mesh model of the manipulated object and our algorithm can help to extend them to point clouds captured from sensor.
+of physical contacts between the robot and the environment that may result in damages. Hence, we need to develop methods that tend to minimize the probability of collisions. The point cloud collision/proximity algorithm can also improve many methods' feasibility and robustness in real world. For example, many algorithms in tactile manipulation, e.g.~\cite{anna:2011}, require an exact or approximated mesh model of the manipulated object and our algorithm can help to extend them to point clouds captured from sensor.
 
 \subsection{Main Results}
 In this chapter, we present a probabilistic collision detection algorithm that can handle environments with uncertainty.
@@ -38,7 +38,7 @@ The rest of this chapter is organized as follows. We survey related work in Sect
 Section~\ref{sec:7:overview}.
 Section~\ref{sec:7:algorithm} shows how probabilistic collision detection computation is reduced to robust classification and Section~\ref{sec:7:bvh} describes the use of bounding volume hierarchies to accelerate the
 computation.
-We highlight the performance of our algorithm on different benchmarks in Section~\ref{sec:7:results}.
+We evaluate the performance of our algorithm on different benchmarks in Section~\ref{sec:7:results}.
 
 \section{Related Work}
 \label{sec:7:related}
@@ -149,7 +149,7 @@ Here $\theta$ is the parameter set used to represent the separating surface $P$.
 \end{equation}
 In practice, the integration over the unknown underlying surface sample $\mathbf x_i'$ makes it hard to compute the surface parameter. As a result,
 we consider an alternative form that is computationally more efficient. Specifically, we use an approximation to Equation~\ref{eq:7:point-collision}
-based on a widely used heuristic for mixture estimation: we simply regard $\mathbf x_i'$ as a parameter of the model instead of a random variable. Then Equation~\ref{eq:7:point-collision} reduces to:
+based on a widely-used heuristic for mixture estimation: we simply regard $\mathbf x_i'$ as a parameter of the model instead of a random variable. Then Equation~\ref{eq:7:point-collision} reduces to:
 \begin{equation}
 \label{eq:7:point-collision:2}
 \theta^* = \argmax_{\theta} \sum_i \ln \sup_{\mathbf x_i'} p(\mathbf x_i', c_i; \theta) p(\mathbf x_i|\mathbf x_i'; \Sigma_i).
@@ -240,7 +240,7 @@ Linear separating surface is mainly limited to the case when all the underlying 
 the surfaces are collision-free. Therefore, we need to extend our algorithm to non-linear $P$. Similar to typical SVM algorithms~\cite{Vapnik:1995:NSL}, we can remove the linear separating surface assumption by applying a {\em kernel trick} on the
 dual form of Equation~\ref{eq:7:point-collision:5}. Briefly, kernel trick is a method that transforms the Euclidean space $\mathcal{R}^n$ into another
 inner space $\mathcal{H}$ using mapping $\Phi$ and then replaces the inner product $\langle \mathbf y, \mathbf z \rangle_{\mathcal{R}^n}$ by the new inner product $K(\mathbf y, \mathbf z) = \langle \Phi(\mathbf y), \Phi(\mathbf z) \rangle_{\mathcal{H}}$ in space $\mathcal{H}$.
-Here $K(\cdot, \cdot)$ is called the {\em kernel function}. Usually a hyper-plane in $\mathcal{H}$ will correspond to a non-linear surface in $\mathcal{R}^n$, which is a popular way to construct non-linear classifiers in machine learning~\cite{Hofmann:2008}. Some of the widely used kernel functions include linear ($K(\mathbf y, \mathbf z) = \mathbf y^T \mathbf z$) and Gaussian ($K(\mathbf y, \mathbf z) = \exp(-\gamma \|\mathbf y - \mathbf z\|^2)$).
+Here $K(\cdot, \cdot)$ is called the {\em kernel function}. Usually a hyper-plane in $\mathcal{H}$ will correspond to a non-linear surface in $\mathcal{R}^n$, which is a popular way to construct non-linear classifiers in machine learning~\cite{Hofmann:2008}. Some of the widely-used kernel functions include linear ($K(\mathbf y, \mathbf z) = \mathbf y^T \mathbf z$) and Gaussian ($K(\mathbf y, \mathbf z) = \exp(-\gamma \|\mathbf y - \mathbf z\|^2)$).
 
 Based on the kernel trick, the non-linear separating surface can be formulated as $P = \{\mathbf x: \mathbf w^T \Phi(\mathbf x) + b = 0\}$. To compute $P$,
 we first transform Equation~\ref{eq:7:point-collision:5} into its dual form. Next, based on the Taylor-expansion technique~\cite{Bi:2005}, we replace $\mathbf y^T \mathbf z$ by kernel function $K(\mathbf y, \mathbf z)$ and
@@ -327,7 +327,7 @@ However, for point clouds, the BVH constructed in this manner will result in fal
 of two objects can be collision-free when the underlying surfaces are non-separable and the algorithm will return incorrect collision-free result
 without checking for collisions between any leaf nodes. To overcome this problem,  we require the BVs split from the same parent to be $\epsilon$-overlap with
 each other. We usually set $\epsilon$ to be $1\%- 5\%$. Such  an overlap will result in some redundancy in terms of point storage: for one object with $n$ points, its
-BVH will store about $(1+\epsilon \lg \frac{n}{n_{max}} ) n$ points, where $n_{max} > 1$ is the threshold used in BV splitting.
+BVH will store about $(1+\epsilon \ln \frac{n}{n_{max}} ) n$ points, where $n_{max} > 1$ is the threshold used in BV splitting.
 
 
 In case of point clouds, a BVH may not fully enclose the point primitives that lie within it.
@@ -365,7 +365,7 @@ As a result, the algorithm only returns a lower bound for the actual collision p
 
 \section{Implementation and Results}
 \label{sec:7:results}
-In this section, we describe some details of our implementation and highlight the performance on several benchmarks.
+In this section, we describe some details of our implementation and evaluate performance on several benchmarks.
 
 \subsection{Implementation}
 First, we discuss how to estimate the distribution of the underlying surface sample $p(\mathbf x_i')$. The mean of $p(\mathbf x_i')$ is $\mathbf x_i$ due to our unbiased assumption. We estimate the covariance $\Psi_i$ based on the formulation described in~\cite{Pauly:2004}:
@@ -380,7 +380,7 @@ We have used our algorithm on data captured using robot sensors. Note that our m
 Therefore, it is difficult to directly compare the quality or accuracy of our algorithm with prior methods. However, our method can guarantee: 1) For easy collision queries, i.e. when the distance between two collision-free objects is large or the two objects are in deep-penetration, our method will give collision probability near 0 or 1. In this case, only very large noise can reverse the outcome of the query. However, our probabilistic algorithm would give the same result as the exact approach that first performs mesh reconstruction from the point clouds. 2) For challenging queries, i.e. when two objects are almost in-contact or have a small penetration, our method computes a collision probability near 0.5, because these configurations are more susceptible to noise. Exact collision algorithms will still provide a yes-no result, but the accuracy of the exact algorithm is governed by the underlying sampling and mesh reconstruction algorithm. If a yes-no collision answer is required, our algorithm uses two thresholds $A \geq 0.5 \geq B$: if collision probability $>A$, we report \emph{collision-free}; if collision probability $< B$, we report \emph{in-collision}; if collision probability is between $A$ and $B$, we report \emph{in-contact}. For example, when collision-avoidance is critical for the underlying applications, we can use large conservative value for A and small conservative value for B to achieve higher guarantees.
 
 \subsection{Results}
-We highlight the performance of our algorithm on real-world point clouds as well as synthetic data sets. We also compare its accuracy with prior collision
+We evaluate the performance of our algorithm on real-world point clouds as well as synthetic data sets. We also compare its accuracy with prior collision
 detection techniques. The running time of our probabilistic algorithm is similar to that of exact collision detection algorithms and varies based on
 number of primitives and their relative configuration.
 

@@ -26,7 +26,7 @@ appears to be $50\text{-}100$X faster than CPU-based PRM planners.
 \subsection{Organization}
 The rest of this chapter is organized as follows. We survey related work on collision detection
 algorithms in Section~\ref{sec:5:related}. Section~\ref{sec:5:overview} gives an overview of our approach and we present parallel algorithm
-for collision queries in Section~\ref{sec:5:algorithm}. We highlight the performance of our algorithm on different benchmarks in Section~\ref{sec:5:result}.
+for collision queries in Section~\ref{sec:5:algorithm}. We evaluate the performance of our algorithm on different benchmarks in Section~\ref{sec:5:result}.
 
 \section{Related Work}
 \label{sec:5:related}
@@ -34,7 +34,7 @@ In this section, we give a brief overview of prior work in parallel algorithms f
 detection.
 
 \subsection{Parallel Collision Queries}
-Some of the widely used algorithms for collision checking are based on \emph{bounding volume hierarchies} (BVH),
+Some of the widely-used algorithms for collision checking are based on \emph{bounding volume hierarchies} (BVH),
 such as $k$-DOP trees, OBB trees, AABB trees, etc~\cite{LM03}. Recent developments include parallel hierarchical computations on multi-core CPUs~\cite{Kim08,TMT10-GMOD} and GPUs~\cite{Lauterbach10}. CPU-based approaches tend to rely on fine-grained communication
 between processors, which is not suited for current GPU-like architectures. On the other hand, GPU-based
 algorithms~\cite{Lauterbach10} use work queues
@@ -55,7 +55,7 @@ In this section, we address
 some issues in designing efficient parallel algorithms to perform collision queries.
 
 \subsection{Notation and Terminology}
-We define some terms and highlight the symbols used in the rest of this chapter.
+We define some terms and symbols used in the rest of this chapter.
 \begin{description}
 \item[chunk] The minimum number of threads that GPUs manage, schedule and execute in parallel, which is also called \emph{warp} in the GPU computing literature. The size of chunk (\emph{chunk-size} or \emph{warp-size}) is 32 on current NVIDIA GPUs (e.g. GTX 280 and 480).
 \item[block] The logical collection of GPU threads that can be executed on the same GPU core. These threads synchronize by using barriers
@@ -89,7 +89,7 @@ each model. The model configurations only affect the actual traversal path of th
 Collision queries between the geometric models are usually accelerated with hierarchical techniques based on BVHs,
 which correspond to traversing the BVTT~\cite{LGLM00}. The simplest parallel algorithms
 used to perform multiple collision queries are based on each thread traversing the BVTT for one configuration and checking whether the given configuration is
-in free space or not. Such a simple parallel algorithm is highlighted in Algorithm~\ref{algo:5:naive}. This
+in free space or not. Such a simple parallel algorithm is shown in Algorithm~\ref{algo:5:naive}. This
 strategy is easy to implement and has been used in previous parallel planning algorithms based on multi-core or multiple CPUs.
 But it may not result in high parallel efficiency on current GPUs due to the following reasons.
 \begin{algorithm}[htb]
@@ -151,7 +151,7 @@ can be joined by a collision-free path by checking for collisions along the traj
 \label{sec:5:algorithm}
 
 
-In this section, we present two novel algorithms for efficient parallel collision checking on GPUs between rigid or articulated models. Our methods can be used to check whether a configuration lies in the free space or to perform local planning computations. The first algorithm uses clustering techniques and fine-grained packet-traversal to improve the
+In this section, we present two novel algorithms for efficient parallel collision checking on GPUs between rigid or articulated models. Our methods check whether a configuration lies in the free space or to perform local planning computations. The first algorithm uses clustering techniques and fine-grained packet-traversal to improve the
 coherence of BVTT traversal for different threads. The second algorithm uses queue-based techniques and lightweight workload
 balancing to achieve higher parallel performance on the GPUs. In practice, the first method can provide 30\%-50\% speed up.
 Moreover, it preserves the per-thread per-query structure of the naive parallel strategy. Therefore, it is easy to implement
@@ -301,7 +301,7 @@ Since each thread performs simple tasks with few branches, our algorithm can mak
 if there is a sufficient number of tasks in all the work queues. However, during the BVTT traversal, the tasks
 are generated dynamically and thus different queues may have varying numbers of tasks and this can lead to an uneven workload among the GPU cores. We use a balancing algorithm that redistributes the tasks among work queues (Figure~\ref{fig:5:balance}). Suppose the number of tasks in each work queue is $$n_i, 1\leq i \leq Q.$$ Whenever there exists $i$ so that $n_i < T_l$ or $n_i > T_u$, we execute our balancing algorithm among all the queues and the number of tasks in each queue becomes $$n_i^* = \frac{\sum_{k=1}^Q n_k}{Q}, 1\leq i \leq Q,$$ where $T_l$ and $T_u$ are two thresholds (we use $\text{chunk-size}$ for $T_l$ and the $W-\text{chunk-size}$ for $T_u$, where $W$ is the maximum size of work queue).
 
-In order to handle $N$ collision queries simultaneously, we use several strategies, which are highlighted and compared in Figure~\ref{fig:5:gproximity-control}. First, we can repeat the single query algorithm~\cite{Lauterbach10} introduced above for each query. However, this has two main disadvantages. First, the GPU kernel has to be called $N$ times from the CPU, which is expensive for large $N$ (which can be $\gg 10000$ for sample-based motion planning). Secondly, for each query, work queues are initialized with only one item (i.e. the root node of the BVTT), therefore the GPU's computational power cannot be fully exploited at the beginning of each query, as shown in the slow ascending part in Figure~\ref{fig:5:gproximity-control}(a). Similarly, at the end of each query, most tasks have been finished and some of the GPU cores become idle, which corresponds to the slow descending part in Figure~\ref{fig:5:gproximity-control}(a).
+In order to handle $N$ collision queries simultaneously, we use several strategies, which are illustrated and compared in Figure~\ref{fig:5:gproximity-control}. First, we can repeat the single query algorithm~\cite{Lauterbach10} introduced above for each query. However, this has two main disadvantages. First, the GPU kernel has to be called $N$ times from the CPU, which is expensive for large $N$ (which can be $\gg 10000$ for sample-based motion planning). Secondly, for each query, work queues are initialized with only one item (i.e. the root node of the BVTT), therefore the GPU's computational power cannot be fully exploited at the beginning of each query, as shown in the slow ascending part in Figure~\ref{fig:5:gproximity-control}(a). Similarly, at the end of each query, most tasks have been finished and some of the GPU cores become idle, which corresponds to the slow descending part in Figure~\ref{fig:5:gproximity-control}(a).
 
 As a result, we use the strategy shown in Figure~\ref{fig:5:gproximity-control}(b): we divide the $N$ queries into $\lceil\frac{N}{M}\rceil$ different sets each of size $M$ with $M\leq N$ and initialize the work queues with $M$ different BVTT roots for each iteration. Usually $M$ cannot be $N$ because we need to use $t \cdot M$ GPU global memory to store the transform information for the queries, where constant $$t \leq \frac{\text{size of global memory}}{M}$$ and we usually use $M=50$. In this case, we only need to invoke the solution kernel $\lceil\frac{N}{M}\rceil$ times. The number of tasks available in the work queues changes more smoothly over time, with fewer ascending and descending parts, which implies higher
 throughput of the GPUs. Moreover, the work queues are initialized with many more tasks, which results in high performance at the beginning of each iteration. In practice, as nodes from more than one BVTT of different queries co-exist in the same queue, we need to distinguish them by representing each BVTT node by $(x,y,i)$ instead of $(x,y)$, where $i$ is the index of collision query. The details for this strategy are shown in Algorithm~\ref{algo:5:balancing:task}.
@@ -412,7 +412,7 @@ The complexity for workload balancing method (Algorithm~\ref{algo:5:balancing}) 
 \label{sec:5:result}
 
 
-In this section, we present some details of the implementation and highlight the performance of our algorithm
+In this section, we present some details of the implementation and evaluate the performance of our algorithm
 on different benchmarks. All the timings reported here were recorded on a machine using an Intel Core i7 3.2GHz CPU and 6GB
 memory. We implemented our collision and planning algorithms using CUDA on a NVIDIA GTX 480 GPU with 1GB of video memory.
 
