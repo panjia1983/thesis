@@ -2,40 +2,41 @@
 \label{chp:APD}
 
 \section{Introduction}
-It is important to compute a representation for configuration space for many applications, such as robotics~\cite{LPT:SpatialPlanning:1983}, physically-based simulation~\cite{Je:2012:PRP}, Minkowski sums~\cite{Varadhan:2006:TPA} and offsets for computer-aided design~\cite{Choi:1997:CAD}. The combinatorial complexity of exact computation of configuration space construction is exponential in the number of its dimensions. Given such high complexity, it remains a major challenge to represent and compute them, especially in higher dimensions.
+Computing a high-quality configuration space representation is important for many applications, such as robotics~\cite{LPT:SpatialPlanning:1983}, physically-based simulation~\cite{Je:2012:PRP}, Minkowski sums~\cite{Varadhan:2006:TPA}, and offset computation~\cite{Choi:1997:CAD}. 
+However, to compute an exact representation for a configuration space is time-consuming, because the complexity of this problem grows exponentially in the dimension of the configuration space. As a result, it remains a major challenge to represent and compute configuration spaces, especially for high dimensional ones.
 
 \subsection{Main Results}
-In this chapter, we present a novel and simple algorithm to approximate high-dimensional configuration space using machine learning techniques. The main idea is to generate samples in the configuration space and compute a function using support vector regression to approximate $\Ccont$. Our algorithm can greatly reduce the number of samples by incremental and active learning techniques.
-This formulation can be used for high dimensional configuration spaces, corresponding to rigid objects with translational motion and/or rotational motion. Our sample generation scheme results in higher convergence and we give bounds on the expected error in our approximation. We also evaluate performance of our algorithm on different high-dimensional benchmarks.
+In this chapter, we present a novel algorithm to efficiently approximate a high-dimensional configuration space using machine learning techniques. The main idea is to generate samples in the configuration space and then use these samples to approximate the contact space $\Ccont$ by a separating surface that can correctly separate all the in-collision and collision-free samples. This separating surface is computed using SVM classification. Our method greatly reduces the required number of samples by leveraging incremental and active learning techniques. 
+When the number of samples increases, the approximate contact space computed by our method can quickly converge to the exact contact space; we also provide bounds on the expected error in the approximate contact space. We evaluate performance of our algorithm on high-dimensional benchmarks.
 
-Additionally, based on the approximate $\Ccont$ computed offline, we design a new method to efficiently approximate the penetration depth (PD) between two rigid objects, i.e., the minimum amount of motion transformation required to separate two intersecting objects. Our algorithm performs a nearest-neighbor query between a given query configuration and precomputed $\Ccont$ approximation. As compared to prior techniques, our approach is more general and more reliable. And the runtime query has a small a overhead (a few milliseconds) and can be used for interactive applications. In practice, we are able to compute approximate PD with less 2-3\% relative error by using a few thousand samples during the offline $\Ccont$ computation. We also use our PD algorithm to compute collision response between non-convex models in Box2D and Bullet physics engines. As compared to prior global PD algorithms, we observe more than an order of magnitude improvement in runtime performance.
-
+Additionally, based on the approximate $\Ccont$ computed offline, we design a new method to efficiently approximate the penetration depth (PD) between two rigid objects. The penetration depth is the minimum amount of motion required to separate two intersecting objects. Our algorithm performs a nearest-neighbor query between a given query configuration and the precomputed $\Ccont$ approximation. Compared to prior techniques, our approach is more general and more reliable. Moreover, the runtime query only has a small overhead (a few milliseconds) and thus can be used for interactive applications. In practice, we are able to compute approximate PD with relative error less than 2-3\% by using a few thousand samples during the offline $\Ccont$ computation. We also use our PD algorithm to compute collision response between non-convex models in Box2D and Bullet physics engines. We observe more than an order of magnitude improvement in runtime performance over that of prior global PD algorithms.
 
 \subsection{Organization}
-The rest of this chapter is organized in the following manner. We survey related work on configuration space computation in Section~\ref{sec:2:related}. We introduce the notation and give an overview of our algorithm in Section~\ref{sec:2:overview}. The approach for approximating the configuration space using active learning techniques is described in Section~\ref{sec:2:learning}, which is then used for approximate PD computation as discussed in Section~\ref{sec:2:approxPD}. We analyze the accuracy and convergence in Section~\ref{sec:2:analysis}. The implementation details and experimental results are given in Section~\ref{sec:2:result}.
+The rest of this chapter is organized as follows. We survey related work on configuration space computation in Section~\ref{sec:2:related}. We introduce the notation and give an overview of our algorithm in Section~\ref{sec:2:overview}. The approach for approximating the configuration space using learning techniques is described in Section~\ref{sec:2:learning}. The approximate configuration space is then used for approximate PD computation, as discussed in Section~\ref{sec:2:approxPD}. We analyze the accuracy and convergence of our approximate PD algorithm in Section~\ref{sec:2:analysis}. The implementation details and experimental results are provided in Section~\ref{sec:2:result}.
 
 \section{Related Work}
 \label{sec:2:related}
 \subsection{Configuration Space Construction}
 There is extensive work on configuration space computation in robotics, geometric computing, and related areas.
 Configuration space computation can be reduced to the problem of computing the arrangement of contact surfaces~\cite{Varadhan:2006:TPA}.
-However, this approach is prone to problems in accuracy and robustness. Moreover, the worst complexity of the entire arrangement can be as high as $\mathcal O(n^k)$ where $n$ is the number of contact surfaces in the arrangement and $k$ is the dimension of the configuration space~\cite{Goodman:Rourke:1997}. Some techniques to approximate the configuration space in lower dimensions are based on generating discrete number of slices\cite{Sacks:SCS:1997}. In this case, the configuration space is composed of ruled surface patches generated by different contact configurations between a moving vertex of object and an edge of the other object. The Minkowski sum is a special case of configuration space computation where the motion of the object is limited to translation~\cite{Leonidas:CCRS:1987,LPT:SpatialPlanning:1983}.
-Minkowski sum computation reduce the problem to computing either an arrangement or a union of a large set of convex primitives, which can be still very difficult in practice.
+However, this approach is prone to problems involving accuracy and robustness. Moreover, the worst-case complexity of the entire arrangement can be as high as $\mathcal O(n^k)$, where $n$ is the number of contact surfaces in the arrangement and $k$ is the dimension of the configuration space~\cite{Goodman:Rourke:1997}. Some techniques for approximating the configuration space in lower dimensions are based on generating a discrete number of slices~\cite{Sacks:SCS:1997}. In this case, the configuration space is composed of many ruled surface patches, i.e., through each point on a surface patch, there exists a straight line that lies on the surface. These ruled surface patches are generated by different contact configurations between a vertex of an object and an edge from the other objects. When the object motion is limited to translation, the resulting configuration space is equivalent to the Minkowski sum between two objects~\cite{Leonidas:CCRS:1987,LPT:SpatialPlanning:1983}. Minkowski sum computation reduces the problem to computing either an arrangement or a union of a large set of convex primitives, which can be still very difficult in practice.
 
 \subsection{PD computation}
-There is extensive work on PD computation in computer graphics,
+PD computation has been studied extensively in computer graphics,
 geometric modeling, haptics, and robotics. We give a brief
 overview of exact and approximate computation algorithms.
 
+Penetration depth is the minimum amount of motion transformation required to separate two intersecting objects. This transformation may correspond to only translation and the resulting PD is called the \emph{translational PD}; when this transformation corresponds to both translation and rotation, the resulting PD is called the \emph{generalized PD}.
+
 For convex polytopes, exact translational PD can be computed using
 the Minkowski sum~\cite{Gino:2001:GDC,Agarwal:2000:CPD,Kim:2002:DEEP}.
-For non-convex objects, the PD can be computed using a combination of convex decomposition, pairwise Minkowski sums, and union computation~\cite{Kim:2002:FPD}. these algorithms are applicable to closed polyhedral shapes. The computational complexity of union computation is high and it can be approximated using rasterization hardware~\cite{Kim:2002:FPD}.
+For non-convex objects, the PD can be computed using a combination of convex decomposition, pairwise Minkowski sums, and union computation~\cite{Kim:2002:FPD}. These algorithms are applicable to closed polyhedral shapes. The union computation has a high computational complexity. To address this issue, it is often approximated using rasterization hardware~\cite{Kim:2002:FPD}.
 
 Most practical techniques for translational PD compute local PD
 or some approximation of global PD. Local PD algorithms only take
-account of local overlapping features (vertices, edges and faces),
+into account local overlapping features (vertices, edges, and faces),
 and compute a transformation to separate those
-features~\cite{Guendelman:2003:NRB,Redon:2006:AFM,Lien:2009:ASM,Tang:2009:IHD,Tang:2012:CPF}. Local intersection volume and its derivative are used for volume-based repulsion in~\cite{Wang12}.
+features~\cite{Guendelman:2003:NRB,Redon:2006:AFM,Lien:2009:ASM,Tang:2009:IHD,Tang:2012:CPF}. For example, local intersection volume and its derivative are used for volume-based repulsion in~\cite{Wang12}.
 Distance fields are also used for local translational PD
 computation~\cite{Heidelberger04} and can be computed in realtime using GPUs.
 Point-based Minkowski
@@ -49,11 +50,11 @@ generalized PD algorithms use optimization-based
 techniques~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP} and compute a locally
 optimal solution based on local approximation of the contact space.
 
-Machine learning techniques have been used for collision detection~\cite{Doshi:2007:ISRR,Pan:2011:ISRR}. However, these techniques cannot be used for PD computation directly. In practice, checking for collisions is much easier than computing the PD between overlapping objects.
+Machine learning techniques have been used for collision detection~\cite{Doshi:2007:ISRR,Pan:2011:ISRR}. However, these techniques cannot be used for PD computation directly. One reason is that in pratice, checking for collisions is much easier than computing the PD between overlapping objects.
 
 \section{Background and Overview}
 \label{sec:2:overview}
-In this part, we introduce our notation and give an overview of our approach. We first present PD formulation in terms of configuration space and then describe our approach to computing approximate $\Ccont$ using active learning, which is then used for efficient computation of approximate PD.
+In this section, we introduce our notation and give an overview of our approach. We first present PD formulation in terms of configuration space and then describe our approach to computing approximate $\Ccont$ using learning techniques, which is then used for efficient computation of approximate PD.
 
 \subsection{Contact Space and PD Formulation}
 \subsubsection{Contact Space}
@@ -74,50 +75,57 @@ contact point or configuration for which PD$(A, B)$ attains its
 minimal value is denoted as $\qc = \argmin_{\q
 \in \Ccont} \dist(\qa, \q)$.
 
-In this chapter, we mainly limit ourselves to translational and rotational motion and
-use appropriate $\dist(\cdot,\cdot)$ metrics.
-For translational PD ($\PDt$), $\dist(\cdot, \cdot)$ is the standard Euclidean distance metric between 3-DOF vectors corresponding to the configurations. Many distance metrics have been proposed for generalized PD ($\PDg$) computation, including weighted Euclidean
-distance~\cite{Wang:CBO:2012} or object norm~\cite{Je:2012:PRP} or displacement distance metric~\cite{Zhang:2007:AFP}. We used the displacement distance metric in our algorithm. More background about this metric is given in the supplementary material. Note that a weighted metric is application dependent and we can adjust the relative weight of the translational and rotational component.
+In this chapter, we focus on the translational and rotational motion. Different types of motion require different $\dist(\cdot,\cdot)$ metrics.
+For translational PD ($\PDt$), the commonly used $\dist(\cdot, \cdot)$ is the standard Euclidean distance metric between dim-3 vectors corresponding to the configurations. Many distance metrics have been proposed for generalized PD ($\PDg$) computation, including weighted Euclidean
+distance~\cite{Wang:CBO:2012}, object norm~\cite{Je:2012:PRP}, and displacement distance metric~\cite{Zhang:2007:AFP}. We use the displacement distance metric in our algorithm, which is defined as:
+\begin{align}
+\label{eq:PDgmetric}
+\dist(\mathbf q_i, \mathbf q_j) = \mu_1 q_1^2 + \mu_2 q_2^2 + \mu_3 q_3^2 + q_4^2 + q_5^2 + q_6^2,
+\end{align}
+where $(q_1, q_2, q_3)$ and $(q_4, q_5, q_6)$ measure the relative rotation and the relative translation between two configurations $\mathbf q_i$ and $\mathbf q_j$, respectively. $(q_0, q_1, q_2, q_3)$ corresponds to the relative quaternion between these two configurations, where $q_0=(1- q_1^2-q_2^2-q_3^2)^{1/2}$. $\mu_i$ is the weight on the rotational component and is computed as~\cite{Zhang:2007:AFP}:
+\begin{align}
+\mu_1 = \frac{4}{\vol}I_{xx}, \ \ \  \mu_2 = \frac{4}{\vol}I_{yy}, \ \ \  \mu_3 = \frac{4}{\vol}I_{zz},
+\end{align}
+where $\diag(I_{xx}, I_{yy}, I_{zz})$ represents the diagonal of the inertia matrix of object $A$ and $\vol$ is the volume of object $A$. For closed models, the volume $\vol$ is computed based on a tetrahedral decomposition computed using an interior point. For other models, we use the volume of its bounding sphere. Note that a weighted metric is application dependent and we can adjust the relative weight of the translational and rotational component.
 
 
 \subsection{Approximate $\Ccont$ Computation}
-To construct a representation of the configuration space, we use an offline learning algorithm as shown in left box in Figure~\ref{fig:2:pipeline}. we first generate a small set of uniform samples in a subspace of $\Cspace$ for two given objects. Next, we classify these configurations into $\Cfree$ or $\Cobs$ by performing exact collision checking between the two objects using bounding volume hierarchies. Given the collision states ($-1$ or $+1$) of all configuration samples, a coarse approximation $\LCSa$ (Figure~\ref{fig:2:pipeline}-(b)) is computed using classifiers. Here, $\LCS$ is the abbreviation of \emph{Learned Contact Space}. Next, we select new samples in $\Cspace$ to further improve the accuracy of the initial representation $\LCSa$ using active learning. We either select samples that are far away from prior samples (so-called \emph{exploration}) (Figure~\ref{fig:2:pipeline}-(c)), and near $\LCSa$ (so-called \emph{exploitation}) (Figure~\ref{fig:2:pipeline}-(d)).
+To construct a representation of the configuration space, we use an offline learning algorithm as shown in the left box in Figure~\ref{fig:2:pipeline}. We first generate a small set of uniform samples in a subspace of $\Cspace$ for two given objects. Next, we justify whether these configurations lie in $\Cfree$ or in $\Cobs$ by performing exact collision checking between the two objects. Given the collision states ($-1$ or $+1$) of all configuration samples, a coarse approximation to the contact space, $\LCSa$ (Figure~\ref{fig:2:pipeline}(b)), is computed using classifiers, where $\LCS$ stands for \emph{Learned Contact Space}. Next, we select new samples in $\Cspace$ to further improve the accuracy of the initial representation $\LCSa$ using active learning. During active learning, we either select samples that are far away from prior samples (\emph{exploration}) (Figure~\ref{fig:2:pipeline}(c)) or samples that are near $\LCSa$ (\emph{exploitation}) (Figure~\ref{fig:2:pipeline}(d)).
 After the new samples are generated, we compute an updated
-approximation $\LCSb$ (Figure~\ref{fig:2:pipeline}-(e)) based on incremental
+approximation $\LCSb$ (Figure~\ref{fig:2:pipeline}(e)) based on incremental
 machine learning techniques. We repeat this process, generating a sequence of approximate representations
 $\LCSa$, $\LCSb$, ..., with increasing accuracy. This iterative process is repeated until the
 collision states of all the new samples can be correctly
 predicted by the current approximation. The final result $\LCS$
-(Figure~\ref{fig:2:pipeline}-(f)) corresponds to either a smooth surface approximation of contact space.
+(Figure~\ref{fig:2:pipeline}(f)) corresponds to a smooth surface approximation of the contact space.
 
 \subsection{Approximate PD Computation}
 Given the approximate representation of the contact space, we can
 then compute the approximate global PD by performing a nearest-neighbor query in the $\Ccont$.
-The definition of approximate penetration depth is an analogy to the exact penetration depth in Equation~\ref{eq:2:PDgdef}:
+The definition of approximate penetration depth is analogous to the exact penetration depth in Equation~\ref{eq:2:PDgdef}:
 
 \begin{align}
 \label{eq:2:PDsdef} \overline{\text{PD}}(A(\qa), B) = \min_{\q \in \LCS}\dist(\qa, \q),
 \end{align}
 
-The accuracy of $\overline{\text{PD}}$ is governed by the accuracy of $\LCS$.
+Thus, the accuracy of $\overline{\text{PD}}$ is determined by the accuracy of $\LCS$.
 
-As shown in Figure~\ref{fig:2:pipeline}-(g), given a relative configuration $\qa$, we perform
-a nearest-neighbor search to compute a configuration that is close to the decision function and project
-to the boundary of $\LCS$. Let $\qc$ correspond
-to the configuration on $\LCS$ that is closest to $\qa$.
-Finally, the distance between $\qa$ and $\qc$ is computed using the appropriate distance metric $\dist(\cdot, \cdot)$ to approximate the PD.
+As shown in Figure~\ref{fig:2:pipeline}(g), given a relative configuration $\qa$, we perform
+a nearest-neighbor search to find a configuration that is closest to the decision boundary $\LCS$ and then project it
+onto $\LCS$. We denote this projection result as $\qc$.
+Finally, the distance between $\qa$ and $\qc$ is computed using an appropriate distance metric $\dist(\cdot, \cdot)$ and the result is an approximation to the exact PD value.
 
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=\linewidth]{figs/2/pipeline.pdf}
-  \caption[Offline computation pipeline for $\Ccont$ construction and the runtime algorithm to compute the PD for a given query configuration]{This figure shows the offline computation pipeline for $\Ccont$ construction and the runtime algorithm to compute the PD for a given query configuration. The different approximations of $\LCS$ are shown below the corresponding stage. We use green points for collision-free configuration samples and red points for in-collision samples.}
+  \caption[Offline computation pipeline for $\Ccont$ approximation and the runtime algorithm to compute the PD for a given query configuration]{This figure shows the offline computation pipeline for $\Ccont$ approximation and the runtime algorithm to compute the PD for a given query configuration. The different approximations of $\LCS$ are shown below the corresponding stages. We use green points to indicate collision-free configuration samples and red points to indicate in-collision samples.}
   \label{fig:2:pipeline}
 \end{figure}
 
 \section{Contact Space Construction via Machine Learning}
 \label{sec:2:learning}
-We now present our algorithm for the offline learning of contact space and the computation of $\LCS$. Different stages of this algorithms
+We now present our algorithm for the offline learning of the contact space and the computation of $\LCS$. Different stages of this algorithm
 are shown in Figure~\ref{fig:2:pipeline}.
 
 \subsection{Initial Sampling}
@@ -125,41 +133,40 @@ are shown in Figure~\ref{fig:2:pipeline}.
 
 We perform uniform sampling in $\Cspace$ to obtain a set of configuration points.  Rather than sampling the entire $\Cspace$,
 we generate samples in a subspace that contains $\Ccont$. Given two objects $A$ and $B$, the contact space $\Ccont$ is contained in the
-in-collision space $\Cobs$ of their bounding volumes $BV(A)$ and $BV(B)$. In our case, we choose
+in-collision space of their bounding volumes $BV(A)$ and $BV(B)$. We choose to use
 axis-aligned bounding boxes (AABB) as the underlying BVs for $\PDt$
 computation, due to their translational invariance in $\Rsqr$
 and $\Rcubic$. Similarly, we use spheres as the underlying BVs for $\PDg$
-computation due to its translational and rotational invariance in
+computation due to their translational and rotational invariance in
 $\SEsqr$ and $\SEcubic$.
 
 
 \subsection{Compute $\LCSa$} \label{sec:2:offline:model}
 Given a set of $k$ samples from
-$\Cobs(BV(A),BV(B))$, we perform exact collision queries between $A$ and $B$  to
-check whether these samples are in-collision space or not. Note that performing Boolean or discrete collision queries between complex models is a much easier problem as compared to PD computation, as shown in Section~\ref{sec:2:analysis:timespacecomplexity}.
-Our goal is to learn an approximate representation, $\LCSa$ from these
+$\Cobs(BV(A),BV(B))$, we perform exact collision queries between $A$ and $B$ to
+check whether these samples are within in-collision space or not. Note that performing Boolean or discrete collision queries between complex models is a much easier problem compared to PD computation, as shown in Section~\ref{sec:2:analysis:timespacecomplexity}.
+Our goal is to learn an approximate representation $\LCSa$ from these
 configurations. In particular, $\LCSa$ corresponds to a decision function
 $f(\q)=0$ that is fully determined by a set of configurations $\SV$
 in $\Cspace$. We refer to $f(\q)$ as the \emph{classifier} and use it to
 predict whether a given configuration $\q$ is collision-free
-($f(\q)<0$) or in-collision ($f(\q)>0$). \SV corresponds to the \emph{support vectors}, which is a
+($f(\q)<0$) or in-collision ($f(\q)>0$). $\SV$ corresponds to the \emph{support vectors}, which are a
 small subset of configuration samples used in learning.
-Intuitively, $\SV$ are the samples that are close to $\Ccont$.
+Intuitively, $\SV$ are the samples that are closest to $\Ccont$.
 
-There are possible methods that can compute the approximate contact space.
-One possible alternative is to use surface fitting techniques to approximate the contact space using an implicit function, but it gets more challenging for high-dimensional spaces (e.g., 6-DOF $\Cspace$). Another possibility is to use regression based learning techniques to approximate the contact space. However, such techniques typically require an improved or continuous approximation of PD values at these samples, which is much harder to compute (as compared to discrete collision queries).
+Other options exist for computing the approximate contact space.
+One alternative is to use surface fitting techniques to approximate the contact space by an implicit function, but this becomes more challenging for high-dimensional configuration spaces (e.g., 6-DOF $\Cspace$). Another possibility is to use regression-based learning techniques to approximate the contact space. However, such techniques typically require an improved or continuous approximation of PD values at these samples, which is much harder to compute compared to discrete collision queries.
 
 \subsubsection{Nonlinear Classifier based on SVM}
-We use the classifier SVM~\cite{Vapnik:1995:NSL} to learn $\LCSa$ from
-the set of $k$ configurations. A decision function
-generated by SVM is a smooth nonlinear surface. As the underlying samples can
-always be separated into collision-free and in-collision spaces, we use
-hard-margin SVM. Intuitively speaking, SVM maps the
-given samples $\{\mathbf q_i\}$ into a higher (possibly infinite)
-dimensional space by a function $\phi$, which computes a
-mapping from an {\emph{input space} onto the \emph{feature space}}. SVM computes a linear
-separating hyperplane characterized by parameters $\mathbf w$ and $b$; its maximal margin
-is in the higher dimensional feature space, which corresponds to a nonlinear separating surface in the input space. In this case $\mathbf w$ is the normal vector to the hyperplane; and the
+We use the SVM classifier~\cite{Vapnik:1995:NSL} to learn $\LCSa$ from
+the initial sampling of $k$ configurations.
+A SVM generates a decision function that is a smooth nonlinear surface. We use the
+hard-margin SVM, as the underlying samples can
+always be separated into collision-free and in-collision spaces. Intuitively, a SVM 
+uses a function to map the given samples $\{\mathbf q_i\}$ from the \emph{input space} into a higher (possibly infinite) dimensional \emph{feature space}.
+A SVM computes a linear
+separating hyperplane characterized by parameters $\mathbf w$ and $b$. The hyperplane's maximal margin
+is in the higher dimensional feature space. The hyperplane corresponds to a nonlinear separating surface in the input space. The $\mathbf w$ is the normal vector to the hyperplane, and the
 parameter $b$ determines the offset of the hyperplane from the
 origin along the normal vector. In the feature space, the distance between a hyperplane and the closest sample point is
 called the `margin', and the optimal separating hyperplane should maximize this distance.
@@ -171,11 +178,11 @@ optimization problem:
 & \text{subject to} & & c_i (\mathbf w \cdot \phi(\mathbf q_i) + b)
 \geq 1, & & 1 \leq i \leq k. \notag
 \end{align}
-where $c_i \in \{-1,+1\}$ is the collision state of each sample ${\mathbf q_i}$..
+where $c_i \in \{-1,+1\}$ is the collision state of each sample ${\mathbf q_i}$.
 
 Let $K(\mathbf q_i, \mathbf q_j) = \phi(\mathbf q_i)^T
 \phi(\mathbf q_j)$ represent the kernel function (i.e., a function
-used to calculate inner products in the feature space), the distance
+used to calculate inner products in the feature space). The distance
 between two points $\phi(\mathbf q_i)$ and $\phi(\mathbf q_j)$ in
 the feature space can be computed as:
 \begin{flalign}
@@ -186,11 +193,11 @@ the feature space can be computed as:
 \end{flalign}
 In our algorithm, we use the radial basis function (RBF) as the kernel:
 $K(\mathbf q_i, \mathbf q_j) = \exp(-\gamma \|\mathbf q_i - \mathbf
-q_j\|^2)$, where $\gamma$ is a positive parameter. In practice, we use $\gamma = 20$ in our algorithm. We use RBF kernel because it keeps the distance ranking
+q_j\|^2)$, where $\gamma$ is a positive parameter. In practice, we use $\gamma = 20$. We use the RBF kernel because it maintains the distance ranking
 in both the input space and the feature space due to the fact that $\|\phi(\mathbf q_i) - \phi(\mathbf q_j)\|_2^2 = 2 - 2 \cdot \exp(-\gamma \|\mathbf q_i - \mathbf q_j\|_2^2)$.
 
 The solution of Equation~\ref{eq:2:svm1} is a nonlinear surface in the
-input space (a hyperplane in the feature space) that separates
+input space (and a hyperplane in the feature space) that separates
 collision-free and in-collision configurations. This solution can be
 formulated as:
 \begin{align}
@@ -198,13 +205,13 @@ formulated as:
 b^* = \sum_{i=1}^k \alpha_i c_i K(\mathbf q_i, \mathbf q) + b^*,
 \end{align}
 where $\mathbf w^*$ and $b^*$ are the solutions of
-Equation~\ref{eq:2:svm1} and $\alpha_i \geq 0$. In this case, a few of the
-$\alpha_i$'s are non-zero and the corresponding $\mathbf q_i$ are
-the \emph{support vectors}, $\SV$. Intuitively, the support vectors
-are those samples very close to the separating hyperplane
-$f(\mathbf q) = 0$, as shown by the red and green configurations in
-Figures~\ref{fig:2:pipeline}(b) and~\ref{fig:2:pipeline}(g).
-Finally, $\LCSa$ consists of an implicit function
+Equation~\ref{eq:2:svm1} and $\alpha_i \geq 0$. 
+The vectors $\mathbf q_i$ corresponding to the non-zero $\alpha_i$ are called
+the \emph{support vectors}, which we denote as $\SV$. Intuitively, the support vectors
+are those samples closest to the separating hyperplane
+$f(\mathbf q) = 0$, as shown by the larger red and green points in
+Figures~\ref{fig:2:pipeline}(b) and ~\ref{fig:2:pipeline}(g).
+Thus, $\LCSa$ consists of an implicit function
 $f_{\LCSa}(\q) = f(\q)$ and a set of samples
 $S_{\LCSa}=S$ (i.e., the support vectors), which
 are used to approximate the exact contact space.
@@ -217,46 +224,41 @@ goal is to actively select new samples so that a better
 approximate contact space representation, $\LCSb$, can be obtained by incorporating
 these samples into $\LCSa$. We use a
 combination of exploration and exploitation~\cite{Huang:2010:ALQ}.
-The basic idea is to determine whether to explore
-or to exploit by flipping a biased coin with a probability
-(initially $0.5$). If the result is a head, we apply exploration.
-If the result is a tail, we apply exploitation, and the given probability  is adjusted
-according to the fraction of exploration samples whose collision
-states are correctly predicted by the current $\LCSi$. The new
+The idea is to determine whether to explore
+or to exploit by flipping a biased coin with a certain probability for landing on heads
+(initially $0.5$). If the result is a head, we apply exploration;
+if it is a tail, we apply exploitation. The probability of landing on heads is adjusted
+according to the fraction of exploration samples' collision
+states that are correctly predicted by the current $\LCSi$. The new
 samples are used to update $\LCSa$ and generate a new approximation
 $\LCSb$ (or refine from $\LCSi$ to $\LCSiplus$). We repeat the active
-learning step until all the new samples can be correctly
-predicted by the current $\LCSi$ or the final result (represented
-as $\LCS$) has sufficient accuracy to approximate $\Ccont$. Later, in Section~\ref{sec:2:analysis} we show that active learning offers improved convergence as compared to uniform or random sampling schemes.
+learning step until all the new samples can either be correctly
+predicted by the current $\LCSi$, or the final result (represented
+as $\LCS$) has sufficient accuracy to approximate $\Ccont$. Later in Section~\ref{sec:2:analysis}, we show that active learning results in improved convergence compared to uniform or random sampling schemes.
 
 
 \subsubsection{Exploration}
-It is possible that $\LCSa$ may miss some holes or components corresponding to collision-free regions, as compared with exact
-$\Ccont$, because no samples were generated inside those regions.
-As a result, there may be some portions that $\LCSa$ may incorrectly classify, as shown in Figure~\ref{fig:2:pipeline}(c). In this case,
-exploration allows us to generate samples far away from prior
+$\LCSa$ may miss some holes or components corresponding to collision-free regions, if no initial samples were generated inside those regions. As a result, there may be some portions that $\LCSa$ may incorrectly classify, as shown in Figure~\ref{fig:2:pipeline}(c). In this case,
+exploration refers to generating samples far away from prior
 samples in order to explore the regions not well-sampled by the
-current $\LCSa$. In our algorithm, we use random sampling to
-explore these new regions (Figure~\ref{fig:2:pipeline}-(c)). As
+current $\LCSi$. In our algorithm, we use random sampling to
+explore these new regions (Figure~\ref{fig:2:pipeline}(c)). As
 shown in Figure~\ref{fig:2:pipeline}(e), two new collision-free
-regions (marked as blue curves) are found after exploration. After
-each exploration sampling step, we need to determine whether the
-exploration improves $\LCSa$ by computing the fraction of the new
-samples that are not correctly predicted by $\LCSb$. If this
-fraction is large (e.g., $0.3$),
-then we increase the probability for exploration; otherwise we
+regions (marked as blue curves) are found using exploration. After
+each exploration sampling step, we compute the fraction of the new
+samples that are not correctly predicted by $\LCSi$ to dertermine whether the exploration improves $\LCSiplus$.
+If this cutoff fraction is large (e.g., $0.3$), then we increase the probability for exploration; otherwise we
 decrease it.
 
 
 \subsubsection{Exploitation}
-Exploitation allows us to generate samples near the decision
-function of a given approximation $\LCSa$.
+Exploitation refers to generating samples near the decision
+function of a given approximation $\LCSi$.
 
-
-We use a simple method based on the \emph{maximal margin} property
-of SVM. The maximal margin
-property~\cite{Vapnik:1995:NSL} states that the decision function
-will have the same distance to the support vectors with different
+For exploitation, we use a simple method based on the \emph{maximal margin} property
+of SVMs. The maximal margin
+property~\cite{Vapnik:1995:NSL} states that in the feature space, the decision function
+will have the same distance to support vectors with different
 labels (i.e., collision-free or in-collision). In order to obtain a sample near the
 decision function $f_{\LCSa} = 0$, we first choose a pair of support
 vectors that are close to each other, but have opposite labels.
@@ -265,20 +267,19 @@ supporting vectors lies on or near the decision function.
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.6\linewidth]{figs/2/interpolation.pdf}
-  \caption[Exploitation in SVM]{Exploitation in SVM:
-  (a) support vectors are on different side of the decision function ($\mathbf q_i$ and $\mathbf q_j$) in input space;
+  \caption[Exploitation in SVMs]{Exploitation in SVMs:
+  (a) support vectors are on different sides of the decision function ($\mathbf q_i$ and $\mathbf q_j$) in the input space;
   (b) their midpoints (black points) are computed in the feature space;
-  (c) the pre-image of the midpoints lies near the decision function and can be used for exploitation.}
+  (c) the pre-images of the midpoints lie near the decision function and can be used for exploitation.}
   \label{fig:2:interpolation}
 \end{figure}
-For nonlinear SVM, the closest point and interpolation computations are
+For nonlinear SVMs, the closest point and interpolation computations are
 performed in the feature space. As shown in
 Figure~\ref{fig:2:interpolation}, we first use the distance metric
 mentioned in Equation~\ref{eq:2:svmdist} to find a pair of
 supporting vectors $\mathbf q_i$ and $\mathbf q_j$. Next, we
 compute their midpoint $\frac{1}{2}(\phi(\mathbf q_i) +
-\phi(\mathbf q_j))$ (shown as black points in Figure~\ref{fig:2:interpolation}-(b)). However, the resulting midpoint may not have
-a pre-image in the input space. Therefore, we search the input
+\phi(\mathbf q_j))$ (shown as black points in Figure~\ref{fig:2:interpolation}(b)). However, since the resulting midpoint may not have a pre-image in the input space, we search the input
 space for a point $\q$ whose image $\phi(\q)$ in
 feature space is closest to $\frac{1}{2}(\phi(\mathbf q_i) +
 \phi(\mathbf q_j))$:
@@ -289,10 +290,10 @@ feature space is closest to $\frac{1}{2}(\phi(\mathbf q_i) +
 \Leftrightarrow & \ \underset{\mathbf q}{\text{max}} & & K(\mathbf q, \mathbf q_i) + K(\mathbf q, \mathbf q_j). &
 \end{aligned}
 \end{equation}
-The solution is solved using an optimization solver based on sequential quadratic programming (SQP), where the midpoint in the input space $\frac{\mathbf q_i +
-\mathbf q_j}{2}$ is used as the initial guess. In our
+The solution is found using an optimization solver, in which the midpoint $\frac{\mathbf q_i +
+\mathbf q_j}{2}$ in the input space is used as the initial guess. In our
 benchmarks, this optimization solver tends to converge quickly
-(less than $10$ iterations).
+(in less than $10$ iterations).
 
 
 \subsection{Incremental Learning}
@@ -300,69 +301,63 @@ benchmarks, this optimization solver tends to converge quickly
 Instead of computing a new decision function
 from scratch using all the previous samples, we apply incremental
 learning techniques to efficiently compute $\LCSiplus$ from
-$\LCSiplus$. Intuitively, incremental learning utilizes a small set
+$\LCSi$. Incremental learning utilizes a small set
 of new samples to update $\LCSi$. The decision function of $\LCSi$
-serves as the initial guess for generating a refined result
-$\LCSiplus$. Incremental SVM~\cite{Karasuyama:2009:MID} can update
-the current result generated using SVM; the key is to retain the optimality condition of Equation~\ref{eq:2:svm1} (i.e., the Kuhn-Tucker condition) on all prior samples while adding new samples. This is achieved by adjusting the coefficients $\alpha_i$ and $b$ in Equation~\ref{eq:2:svmf} and by migrating some samples
-in and out of support vector set $\SV$. The coefficient adjustment and the support vector migration are guided by the gradient of the objective function in Equation~\ref{eq:2:svmf}.
+serves as the initial guess for generating $\LCSiplus$. The incremental SVM~\cite{Karasuyama:2009:MID} can update
+the current result generated using SVMs; the key is to retain the optimality condition of Equation~\ref{eq:2:svm1} (i.e., the Kuhn-Tucker condition) on all prior samples while adding new samples. This is achieved by adjusting the coefficients $\alpha_i$ and $b$ in Equation~\ref{eq:2:svmf} and by adjusting support vector set $\SV$. The coefficient adjustment and the support vector changes are guided by the gradient of the objective function in Equation~\ref{eq:2:svmf}.
 
 \subsection{Terminating Active Learning}
 Active learning terminates when either of these conditions has been satisfied:
 \begin{enumerate}
     \item The collision states of all the new samples generated during
-exploration and exploitation computation can be correctly predicted by the
+exploration and exploitation can be correctly predicted by the
 current approximation $\LCSi$.
-    \item The total number of samples used in active learning iterations is more than a user given threshold.
+    \item The total number of samples used in active learning iterations is more than a user-specified threshold.
    \end{enumerate}
-The first condition guarantees that all the configurations used for learning $\LCS$ are consistent (i.e., they can be correctly predicted by $\LCS$). This implies that the current $\LCS$ has a high probability of accurately approximating the underlying contact space.
-The second condition controls the error in PD computation. As more samples are used, we get a better approximation to $\Ccont$, and thereby lower PD error.
+The first condition guarantees that all the configurations used for learning $\LCS$ are consistent (i.e., they can be correctly predicted by $\LCS$). This implies that the current $\LCS$ is a close approximation of the underlying contact space.
+The second condition controls the error in PD computation. As more samples are used, we get a better approximation to $\Ccont$, and thereby a lower PD error.
 
 
 \section{Approximate PD Computation}
 \label{sec:2:approxPD}
 
-We use the approximate contact space, $\LCS$, to perform PD queries at
-runtime. In this section, we give details on the runtime
-algorithm. It consists of two parts: local $\LCS$ refinement based on consistency checks and
+We use the learned approximate contact space $\LCS$ to perform PD queries at
+runtime. This section describes details on the runtime
+algorithm. It consists of two parts: local $\LCS$ refinement based on consistency checks, and
 computing the nearest configuration on $\LCS$.
 
 
 \subsection{Local $\LCS$ Refinement}
 Let $\qa$ be a configuration that corresponds to overlapping rigid objects $A$
-and $B$. The exact collision check  between these objects is performed using
-bounding volume hierarchies. We also compute the approximate collision state corresponding to $\qa$ using $\LCS$: i.e.,
+and $B$. The exact collision check between these objects is performed using
+bounding volume hierarchies. We also compute the approximate collision state corresponding to $\qa$ using $\LCS$: i.e., we
 check whether ($f(\qa)>0$) as that corresponds to an in-collision configuration.
 It is possible that the collision state predicted
-using $\LCS$ may be different from that computed by the  exact
+using $\LCS$ may be different from that computed by the exact
 algorithm, which implies that $\LCS$ is not sufficiently
-accurate at approximating the contact space in the neighborhood of \qa.
+accurate at approximating the contact space in the neighborhood of $\qa$.
 In this case, we refer to $\qa$ as an \emph{inconsistent} configuration;
 otherwise, it is consistent.
 Generally, an inconsistent configuration occurs when the query is located in
-a $\Cspace$ region that is not well sampled during learning phase.
+a $\Cspace$ region that is not well sampled during the learning phase.
 
 Our runtime algorithm first checks
 whether a given query $\qa$ is consistent. If $\qa$ is inconsistent, $\qa$ corresponds to a collision-free configuration
 predicted by $\LCS$ ($f(\qa)<0$) and its distance to $\LCS$ is
 more than a user-specified error threshold. In this case, we locally refine
-$\LCS$ by incorporating $\qa$ into $\LCS$ using incremental learning (see
-Section~\ref{sec:2:incremental_learning}).
-This local refinement of $\LCS$ improves the query efficiency and the accuracy of PD computation, as shown in Equation~\ref{eq:2:Errdef}.
+$\LCS$ by incorporating $\qa$ into $\LCS$ using incremental learning (Section~\ref{sec:2:incremental_learning}).
+This local refinement of $\LCS$ improves the query efficiency and the accuracy of PD computation (Equation~\ref{eq:2:Errdef}).
 
 During each runtime query, we perform an incremental learning step for an inconsistent
-single configuration. As a result, its runtime overhead is $\mathcal O(1)$.
-Moreover, this local refinement step improves the accuracy of $\LCS$ in
-regions, where more PD queries are performed by an application during runtime. As a result, this scheme
-exploits the spatial coherence in configuration space for nearby PD queries
-and results in more accurate answers for all those queries.
-
+single configuration. This incremental learning has an runtime overhead of $\mathcal O(1)$.
+Moreover, this local refinement step improves the accuracy of $\LCS$ in local
+regions where more PD queries are potentially performed by an application during runtime. 
+As a result, this step results in more accurate answers for those nearby queries by exploiting the spatial coherence in the configuration space.
 
 \subsection{$\LCS$ Projection}
 Given a consistent configuration $\qa$, we search for the closest configuration
-on $\LCS$ to compute the PD.  In particular,
-we \emph{project} $\qa$ onto the decision boundary $f_{LCS} = 0$, and let
-$\qc$ be the  nearest configuration on $\LCS$. In this case, the approximate
+on $\LCS$ to compute the PD. In particular,
+we \emph{project} $\qa$ onto the decision boundary $f_{LCS} = 0$ to obtain $\qc$, the nearest configuration on $\LCS$. In this case, the approximate
 PD is computed using $\dist(\qa, \qc)$ function.
 For SVM classifiers, the projection computation can be reduced to a constrained
 optimization problem:
@@ -372,18 +367,16 @@ optimization problem:
  & \underset{\mathbf q}{\text{min}} & \dist(\mathbf \qa, \mathbf q), & & \text{subject to} & & f_{LCS}(\mathbf q) = 0.
 \end{aligned}
 \end{equation}
-A key challenge is to perform this projection efficiently, ensuring that the optimization algorithm is not
-trapped in a local minima, as the shape of the decision function can be rather complicated.
+A key challenge is to perform this projection efficiently and ensure that the optimization algorithm is not
+trapped in a local minima, as the shape of the decision function can be complicated.
 In order to deal with these issues, we perform the computation in two phases:
 first, we perform a $k$-nearest-neighbor search in $\Cspace$ to compute the configuration
-$\qv \in S_{LCS}$ (i.e., among the support vectors) that is closest to $\qa$ based on our $\dist(\cdot, \cdot)$ metric. Next, we
+$\qv \in S_{LCS}$ (i.e., the configuration among the support vectors) that is closest to $\qa$ based on our $\dist(\cdot, \cdot)$ metric. Next, we
 use $\qv$ as an initial guess to the constrained optimization problem and compute the closest configuration on the $\LCS$.
 Since $\qv$ is a configuration very close to the decision boundary, it serves as a good initial guess.
 
 We use different nearest-neighbor (NN)  search algorithms to compute $\qv$, depending on whether we are
-performing this search in 3-DOF $\Cspace$ or 6-DOF $\Cspace$. For 3-DOF $\Cspace$, $\dist(\cdot, \cdot)$ corresponds to the Euclidean distance metric, and we use a kd-tree to accelerate NN computation. As a result, we use a hierarchical clustering algorithm for efficient NN search~\cite{Muja:2009:FAN}.
-
-
+performing this search in 3-DOF $\Cspace$ or 6-DOF $\Cspace$. For 3-DOF $\Cspace$, $\dist(\cdot, \cdot)$ corresponds to the Euclidean distance metric, and we use a kd-tree to accelerate NN computation. For 6-DOF $\Cspace$, we use a hierarchical clustering algorithm for efficient NN search~\cite{Muja:2009:FAN}.
 
 \section{Analysis}\label{sec:2:analysis}
 In this section, we analyze various characteristics of our algorithm, including errors in PD computation, benefits of active learning, and time and space complexity.
@@ -399,52 +392,52 @@ This error can be expressed as:
 \label{eq:2:Errdef0} e_{\text{col}} = \mathbb E
 \left|e_\text{cs}(\mathbf q) \right|,
 \end{equation}
-where $e_{\text{cs}}(\q)=0$ if \q is a consistent configuration; otherwise $e_{\text{cs}}(\q)=1$ if $\q$ is inconsistent.
-Expectation $\mathbb E$ is performed for a series of
+where $e_{\text{cs}}(\q)=0$ if $\q$ is a consistent configuration, and $e_{\text{cs}}(\q)=1$ if $\q$ is inconsistent.
+Expectation $\mathbb E$ is calculated from a series of
 random configurations or queries. Typically, these queries arise from an application (e.g., dynamic simulation), and
 we assume that they follow a uniform distribution in $\Cspace$.
 
 The accuracy of approximate global PD computation is measured by the expected error that arises
-while using $\LCS$ to compute the PD for a random configuration in $\Cspace$:
+when using $\LCS$ to compute the PD for a random configuration in $\Cspace$:
 \begin{equation}
 \label{eq:2:Errdef} e_{\text{PD}} = \mathbb E
 \left|\overline{\text{PD}}(A(\q), B) - \text{PD}(A(\q), B)\right|.
 \end{equation}
 Note that we scale the objects such that the maximum dimension of the subspace $\Cobs (BV(A),BV(B))$ is equal to 1.
-A value of small $e_{\text{col}}$ implies a small value of $e_{\text{PD}}$ and vice versa.
+The accuracies of approximate global PD and approximate contact space are closely related: a small value of $e_{\text{col}}$ implies a small value of $e_{\text{PD}}$ and vice versa.
 
 \begin{figure}[t]
 \begin{center}
 \subfloat[$e_{\text{col}}$ for 2D spiders]{\includegraphics[clip=true, width=0.43\textwidth]{figs/2/active/spider_activelearning-crop.pdf}}
 \subfloat[$e_{\text{col}}$ for 3D cup-spoon]{\includegraphics[clip=true, width=0.43\textwidth]{figs/2/active/cupspoon_activelearning-crop.pdf}}
 \end{center}
-\caption[Relative error convergence of active learning vs. uniform sampling for 2D and 3D object pairs]{Relative error convergence of active learning (blue) vs. uniform sampling (red) for 2D and 3D object pairs. These results demonstrate the benefits of active learning in terms of fewer samples and improved accuracy.}
+\caption[Relative error convergence of active learning vs. uniform sampling for 2D and 3D object pairs]{Relative error convergence of active learning (blue) vs. uniform sampling (red) for 2D and 3D object pairs. These results demonstrate the benefits of active learning in terms of requiring fewer samples and improved accuracy.}
 \label{fig:2:activelearningtime}
 \end{figure}
 
 \subsection{Benefits of Active Learning}
-A key component of our algorithm is the computation of $\LCS$ by generating appropriate samples in the configuration space. The simplest choice is to perform uniform sampling in $\Cobs (BV(A),BV(B))$ or  to use some other random sampling scheme. Instead, we use a combination of active and incremental learning techniques to refine $\LCSi$ and improve its accuracy.
+A key component of our algorithm is the computation of $\LCS$ by generating appropriate samples in the configuration space. The simplest choice is to perform uniform sampling in $\Cobs (BV(A),BV(B))$ or to use some other random sampling scheme. Instead, we use a combination of active and incremental learning techniques to refine $\LCSi$ and improve its accuracy.
 
 
 The time and space complexity of the $\LCS$ precomputation phase is a function of
-the number of samples used for active learning iterations. In particular, our
-goal is to ensure that the final $\LCS$ corresponds to a good approximation of $\Ccont$. Note that the number of samples required to achieve a given error bound $e_{\text{col}}$ depends on both the active learning technique and the underlying classification method used within active learning iterations. In general, it is non-trivial to derive a tight bound on the number of samples for a specific combination of active learning and classification algorithms. However, we use some general results on sample complexity of active learning~\cite{Hanneke:2013} to show the benefits of our approach.
+the number of samples used for active learning iterations. The number of samples required to achieve a given error bound $e_{\text{col}}$ depends on both the active learning technique and the underlying classification method used within active learning iterations. It is non-trivial to derive a tight bound on the number of samples required for a specific combination of active learning and classification algorithms. However, we use general results on the sample complexity of active learning~\cite{Hanneke:2013} to show the benefits of our approach.
 \begin{theorem}
 \label{thm:2:activelearning}
 If the number of samples used in active learning iterations of $\LCS$ computation is more than $N$,
 where $N=\mathcal O(\log(1/(\epsilon \delta))$, then there exists one active learning technique which can guarantee that with probability at least $1-\delta$, the expected error of the $\LCS$ result will satisfy the bound $e_{\text{col}}\leq\epsilon$.
 \end{theorem}
 
-Intuitively, this theorem says that there exists a special active learning technique that can derive these bounds on $\LCS$ approximation. We give a proof of this theorem in the supplemental material based on CAL (Cohn-Atlas-Ladner) algorithm~\cite{Cohn:ML:1994}. This guarantees our $\LCS$ computation to have a bounded error with a high probability, if more than $N=\mathcal O(\log(1/(\epsilon \delta))$ samples are used. However, the CAL active learning algorithm is not practical~\cite{Hanneke:2013} and rather we use a combination of exploration-and-exploitation as the active learning (Section~\ref{sec:2:offline:activelearning}) in our $\LCS$ computation algorithm.
+Intuitively, this theorem states there exists a particular active learning technique that will achieve a given bound on $\LCS$ approximation error with high probability.
+A proof of this theorem can be obtained based on the CAL (Cohn-Atlas-Ladner) algorithm~\cite{Cohn:ML:1994}. Our $\LCS$ computation is guaranteed to satisfy a bounded error with high probability, if more than $N=\mathcal O(\log(1/(\epsilon \delta))$ samples are used. However, the CAL active learning algorithm is not practical~\cite{Hanneke:2013} and rather we use a combination of exploration and exploitation for active learning (Section~\ref{sec:2:offline:activelearning}) in our $\LCS$ computation algorithm.
 
-A lot of applications use exploration-and-exploitation active learning algorithm. In this case, we can expect that the use of exploration-and-exploitation could also result in a bound similar to Theorem~\ref{thm:2:activelearning}, although the exact derivation of such a bound is a good topic for future research.
+Many applications use exploration and exploitation for active learning algorithms. We expect that the use of exploration and exploitation likely also results in a bound similar to Theorem~\ref{thm:2:activelearning}, although the exact derivation of such a bound is a good topic for future research.
 
 Since $e_{\text{col}}$ and $e_{\text{PD}}$ are closely related to each other, Theorem~\ref{thm:2:activelearning} also implies that
-$e_{\text{PD}}$ decreases at an exponential rate with the number of samples.
-This is in contrast with using uniform sampling strategy to
-learn the contact space, in which $\LCS$ converges to the
+$e_{\text{PD}}$ decreases exponentially with the number of samples.
+In contrast, when using a uniform sampling strategy to learn the contact space, 
+$\LCS$ converges to the
 exact contact space
-at a polynomial rate when the number of samples
+at a polynomial rate as the number of samples
 increases~\cite{Mohri:2012:FML}:
 \begin{theorem}
 \label{thm:2:uniform}
@@ -454,37 +447,37 @@ with probability $\geq 1- \delta$, we have the error bound $e_{\text{col}} \leq
 \epsilon$.
 \end{theorem}
 
-We also measured the expected error, $e_{\text{col}}$ or $e_{\text{PD}}$, in
-complex 2D and 3D benchmarks, as shown in Figure~\ref{fig:2:activelearningtime} (and also supplementary material).
-This demonstrates the high convergence rate and lower error in the $\LCS$ and PD computation using active learning, with the same number
+We also measured the expected errors, $e_{\text{col}}$ and $e_{\text{PD}}$, in
+complex 2D and 3D benchmarks, as shown in Figure~\ref{fig:2:activelearningtime}.
+This demonstrates the high convergence rate and lower error in $\LCS$ computation and PD computation using active learning given the same number
 of samples.
 
 \subsection{Benefits of Local Refinement}
-Our contact space and PD computation algorithms are probabilistic algorithms. Their accuracy is governed by
-the samples chosen during the learning phase, including initial samples and active learning, as well as
+Our contact space and PD computation approaches are probabilistic algorithms. Their accuracy is determined by
+the samples chosen during the learning phase, including the initial samples and active learning as well as
 the runtime queries. As more PD queries are performed within a subspace or a specific region of $\Cspace$,
-the accuracy of $\LCS$ in that subspace or region tends to be higher.
+the accuracy of $\LCS$ in that subspace or region tends to become higher.
 This is due to the local refinement step that is performed during runtime whenever we encounter an
 inconsistent query configuration.
 The incremental learning algorithm updates $\LCS$ around the query configuration by taking into account
 local information in $\Cspace$.
 In many applications, including dynamic simulation, haptics, or motion planning, a high proportion of
-sample queries correspond to nearby positions of the two objects $A$ and $B$. As a result, the runtime
+sample queries correspond to positions near the two objects $A$ and $B$. As a result, the runtime
 query configurations are relatively close to each other in $\Cspace$ and the local refinement
 step improves the accuracy of $\LCS$ in that region. This implies that as more queries are performed in
 a localized region of $\Cspace$, the accuracy of $\LCS$ and PD queries improves.
 Our algorithm does not make any assumptions about the application or the distribution of runtime query
 configurations. We expect that the accuracy of local refinement will improve at the rate given by
-uniform sampling (i.e., Theorem~\ref{thm:2:uniform}), rather than the exponential rate of active learning.
+uniform sampling (i.e., Theorem~\ref{thm:2:uniform}), rather than at the exponential rate of active learning.
 In other words, after generating $N = \mathcal O(1/\epsilon^2)$ samples within a subspace at runtime,
-the expected error locally around those samples will be less than $\epsilon$.
+the expected error locally around those samples should be less than $\epsilon$.
 
 
 \subsection{Time and Space Complexity}
 \label{sec:2:analysis:timespacecomplexity}
 The precomputation or learning phase is performed for each object pair $(A, B)$
 in the environment. The exact collision check is performed using precomputed bounding volume hierarchies.
-Given two objects with $m$ and $n$ triangles, the expected cost of a single
+Given two objects represented as meshes with $m$ and $n$ triangles, the expected cost of a single
 exact collision query is $T_{col} = O(\log m + \log n)$.
 
 \begin{figure}[htb]
@@ -504,13 +497,13 @@ exact collision query is $T_{col} = O(\log m + \log n)$.
 \subfloat[$\LCS_5, |S|=869$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS5.png}}
 \subfloat[$\LCS_9, |S|=1350$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS10.png}}
 \subfloat[$\LCS_{12}, |S|=1572$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS17.png}}
-\caption[$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon]{$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon. We provide the number of support vectors corresponding to $\LCSi$. In our benchmarks, the algorithm can compute a good approximation in a few iterations.}
+\caption[$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon]{$\LCS$ computation using active learning for $\PDt$ query between 3D cup and spoon. We provide the number of support vectors corresponding to $\LCSi$. As shown, the algorithm can compute a good approximation in a few iterations.}
 \label{fig:2:LCSinActiveLearning3D}
 \end{center}
 \end{figure}
 
 
-\paragraph{Offline Learning:} The timing complexity for the learning
+\paragraph{Offline Learning:} The time complexity for the learning
 phase can be estimated as
 \begin{align} \label{eq:2:cost}
 (T_{LCS_0} + \sum_{i=1}^{I_{AL}} (T_{ES_i} + T_{LCS_i})) + T_{col} \cdot \sum_{i=1}^{I_{AL}} N_{LCS_i},
@@ -518,91 +511,89 @@ phase can be estimated as
 where $T_{LCS_0}$ is the time complexity to learn the initial approximation;
 $T_{ES_i}$ is the time cost to perform exploitation sampling or
 exploration sampling in the $i$-th iteration of active learning;
-$T_{LCS_i}$ is the time cost for the $i$-th step incremental
-learning; $I_{AL}$ is the number of iterations performed during active
-learning. We also denote the number of new samples generated
-during $LCS_i$ as $N_{LCS_i}$. We need to perform collision checking for each sample generated during the learning phase; hence the collision cost is
+$T_{LCS_i}$ is the time cost for the $i$-th step of incremental
+learning, and $I_{AL}$ is the number of iterations performed during active
+learning. We denote the number of new samples generated
+during $LCS_i$ as $N_{LCS_i}$. We perform collision checking for each sample generated during the learning phase; hence the collision cost is
 $T_{col} \cdot \sum_i N_{LCS_i}$.
 
 $T_{LCS_0}$ complexity is governed by the SVM classifier. SVM computation boils down
 to solving a constrained quadratic optimization problem using the interior
-point or conjugate gradient method and its worst case complexity
+point or conjugate gradient method, and its worst-case complexity
 is $\mathcal O(N_{LCS_0}^{2.3})$.
 
-Incremental learning combines each new sample into $\LCS$ within
+Incremental learning combines each new sample into $\LCS$ in
 constant time, and hence we have $T_{LCS_i} = \mathcal
 O(N_{LCS_i})$. $T_{ES_i}$ is the time cost for exploitation sampling
 or exploration sampling. For exploration, $T_{ES_i} = \mathcal
 O(N_{LCS_i})$. The time complexity for exploitation sampling is
 $\mathcal O(|S_{LCS_i}|)$ as we perform interpolation between each
 support vector of $\LCSi$ and its $k$-nearest neighbors, which can
-be bounded above as $\mathcal O(\sum_i N_{LCS_i})$.
+be bounded from above as $\mathcal O(\sum_i N_{LCS_i})$.
 
-Overall, the timing complexity for the learning phase is
+Overall, the time complexity for the learning phase is
 $\mathcal O(\log(\frac{1}{\epsilon}) \sum_i{N_{LCS_i}} +
 N_{LCS_0}^{2.3}) + T_{col} \cdot \sum_i N_{LCS_i}$.
 The space complexity of our algorithm is linear in the
-number of samples used during the learning and runtime phases and linear in the size of support vectors in the final $\LCS$ representation.
+number of samples used during the learning and runtime phases, and is linear in the number of support vectors in the final $\LCS$ representation.
 
-\paragraph{Runtime Query:} The timing complexity in the runtime query
+\paragraph{Runtime Query:} The time complexity in the runtime query
 phase depends on $\left| S_{LCS} \right|$, i.e., the number of
-support vectors in $\LCS$. $\left| S_{LCS} \right|$ is related to
-the smoothness of exact $\Ccont$, and not so much on the geometric complexity of $A$ and $B$ (see Figures~\ref{fig:2:LCSinActiveLearning2D2} and~\ref{fig:2:LCSinActiveLearning3D}).
+support vectors in $\LCS$. $\left| S_{LCS} \right|$ depends on
+the smoothness of the exact $\Ccont$, and not as much on the geometric complexity of $A$ and $B$ (see Figures~\ref{fig:2:LCSinActiveLearning2D2} and~\ref{fig:2:LCSinActiveLearning3D}).
 For example, the $\Ccont$ of a sphere and another object (i.e., the offset surface) is always smooth, and
 therefore a small $\SVLCS$ is sufficient to generate a good approximation of $\Ccont$.
-We also notice that in our benchmarks, where $|S|$ for the teeth model (40K triangles) is comparable or higher than bunnies (70K triangles), dragon (230K triangles), and Buddha (1M triangles) models. Furthermore, we generated different low-polygon count representations of the Buddha models and observed similar performance on all these approximations (see supplementary material).
-In other words, the size of
-$\SVLCS$ depends on the combinatorial complexity of $\Ccont$. Moreover, the size of $\SVLCS$
-can control the tradeoff between the accuracy of PD
+We also notice this in our benchmarks, where $|S|$ for the teeth model (40K triangles) is comparable or higher than that for the bunny (70K triangles), dragon (230K triangles), and Buddha (1M triangles) models. Furthermore, we generated different low-polygon count representations of the Buddha models and observed similar performance on all these approximations.
+Thus, the size of
+$\SVLCS$ depends on the combinatorial complexity of $\Ccont$ and is also controlled by the tradeoff between 
+between the accuracy of PD
 computation and the query efficiency.
 
 
 
 \section{Implementation and Performance}
 \label{sec:2:result}
-In this section, we evaluate performance of our algorithm on complex benchmarks and compare it with prior techniques.
+In this section, we evaluate the performance of our algorithm on complex benchmarks and compare it with prior techniques.
 We implemented our algorithm using C++ under Visual Studio 2010
-and Windows 7. The two main routines needed during the learning phase are exact collision checking between polygonal models and computing the approximation using support vector machines. At runtime, we need the capability to perform a nearest-neighbor query in the configuration space and to compute a projection using  constrained optimization. We used the OBBTree algorithm~\cite{Gottschalk:1996:OHS} for exact collision detection between polygonal objects.
-We also used a variant of GJK algorithm~\cite{Gino:2001:GDC} to compute translational penetration depth between convex polytopes to compare the performance with prior methods. In our implementation, we have set $\epsilon=2.5\%$ and $\delta=0.01$.
+and Windows 7. The two main routines required during the learning phase are exact collision checking between polygonal models and computing the approximate $\LCS$ using support vector machines. At runtime, we need to perform a nearest-neighbor query in the configuration space and to compute a projection using constrained optimization. We used the OBBTree algorithm~\cite{Gottschalk:1996:OHS} for exact collision detection between polygonal objects. We also used a variant of the GJK algorithm~\cite{Gino:2001:GDC} to compute translational penetration depth between convex polytopes, to compare against the performance of our method. In our implementation, we set $\epsilon=2.5\%$ and $\delta=0.01$.
 
 \subsection{Benchmarks}
-We have used many complex benchmarks to evaluate the performance of our algorithm. They are shown in Figure~\ref{fig:2:demo}. In the simulation, there are multiple contacts between the overlapping objects and we compute $\PDt$ and $\PDg$ between them. The performance of the  learning and runtime phases are shown in Table~\ref{tab:2:learningperformance}.
+We have used many complex benchmarks (Figure~\ref{fig:2:demo}) to evaluate the performance of our algorithm. In the simulation, there are multiple contacts between the overlapping objects and we compute $\PDt$ and $\PDg$ between them. The performance of the learning and runtime phases are shown in Table~\ref{tab:2:learningperformance}.
 
-We precompute BVHs for collision detection, which has a linear memory complexity for each object. For each different type of object pair, we precompute their $\LCS$, which takes about 5KB (star-box)-110KB (teeth, dragon, bunny, Buddha) memory.
-
-
+For collision detection, we precompute the BVH for each object, which has a linear memory complexity. For each type of object pair, we precompute the $\LCS$, which takes about 5KB (star-box) to 110KB (teeth, dragon, bunny, Buddha) memory.
 
 
 
-\subsection{Physically Based Simulation using PD}
+
+
+\subsection{Physically-based Simulation using PD}
 Penetration depth has been used in many dynamic simulators to compute collision response based on penalty forces or constraint-based solvers.
-We have integrated our new PD algorithm into the well-known game physics
-engines, Box2D~\cite{Erin:2012:Box2D} and Bullet~\cite{Erwin:2012:Bullet}. These engines have support for PD computation based on
-convex decomposition and computing the local translational penetration depth between convex polytopes~\cite{Gino:2001:GDC}.
+We have integrated our new PD algorithm into two well-known game physics
+engines: Box2D~\cite{Erin:2012:Box2D} and Bullet~\cite{Erwin:2012:Bullet}. These engines have support for PD computation based on
+convex decomposition and can compute the local translational penetration depth between convex polytopes~\cite{Gino:2001:GDC}.
 However, convex decomposition can result in a high number of convex pieces, Moreover, the decomposition-based approach is mainly limited to closed
-objects and  doesn't guarantee that two
-overlapping non-convex objects can separate as they only compute local PD using the convex pairs.
+objects and does not guarantee that two
+overlapping non-convex objects will separate, as they only compute local PD using the convex pairs.
 
-\textbf{Contact Points and Normals:} For an inter-penetration configuration \qa and its resulting contact configuration \qc, the contact points and contact normal can be computed in the workspace for two objects. First, for the contact configuration \qc, its nearest collision-free configuration can be computed using support vectors based on k-nearest-neighbor search in $\Cspace$. Next, the closest points and normals of the given two objects can be computed using the proximity query algorithm~\cite{LGLM00}. Reliable multiple contact points can be obtained using perturbation and persistent contact caching techniques~\cite{Erwin:2012:Bullet}.
+\textbf{Contact Points and Normals:} For an inter-penetration configuration $\qa$ and its resulting contact configuration $\qc$, the contact points and contact normal can be computed in the workspace for two objects. First, for the contact configuration $\qc$, its nearest collision-free configuration can be computed using support vectors based on k-nearest-neighbor search in $\Cspace$. Next, the closest points and normals of the given two objects can be computed using the proximity query algorithm~\cite{LGLM00}. Reliable multiple contact points can be obtained using perturbation and persistent contact caching techniques~\cite{Erwin:2012:Bullet}.
 
-\textbf{Box2D} uses PD computation in  impulse-based collision response algorithm.
+\textbf{Box2D} uses PD computation in the impulse-based collision response algorithm.
 We demonstrate the performance of our algorithm on
-two complex benchmarks (Figure~\ref{fig:2:demo}): (1) angry bird characters falling into a complex chute; (2) Nazca spiders rolling in a tumbler. We precompute the $\LCS$ approximation in 3-DOF $\Cspace$.
-The convex decomposition results in $17$, $30$, and $32$ convex pieces for BigRedBird, WhiteBird and GreenPig models, respectively. Moreover, the Nazca spiders decomposed into $77$ convex pieces. We have observe nearly $20$ times improvement in PD query using our active learning algorithm over
-techniques based on convex decomposition used in Box2D (see Figure~\ref{fig:2:performancecomparison}-(a)(b)). The collision response algorithm is based on Box2D implementation.
+two complex benchmarks (Figure~\ref{fig:2:demo}): (1) angry bird characters falling into a complex chute and (2) Nazca spiders rolling in a tumbler. We precompute the $\LCS$ approximation for a 3-DOF $\Cspace$.
+The convex decomposition results in $17$, $30$, and $32$ convex pieces for the BigRedBird, WhiteBird and GreenPig models, respectively. The Nazca spider is decomposed into $77$ convex pieces. We observed an improvement in PD querying of nearly a factor of $20$ when using our active learning algorithm, compared to
+techniques based on convex decomposition used in Box2D (see Figure~\ref{fig:2:performancecomparison}(a)(b)). The collision response algorithm is based on the Box2D implementation.
 
 
-\textbf{Bullet} uses PD computation to handle  penetrations in their constraint-based solver.
+\textbf{Bullet} uses PD computation to handle penetrations in their constraint-based solver.
 We demonstrate the benefits of our PD computation algorithm in three scenarios (shown in Figure~\ref{fig:2:demo}):
-(1) interlocking $10$ rings; (2) a rainfall of $1,000$ rings; (3) collapse of a tower composed of $5,500$ rings.
-Each ring consists of $256$ triangles.
-We precompute the $\LCS$ approximation in 6-DOF $\Cspace$ and use it to perform PD queries during the simulation.
-Each ring is decomposed into $16$ convex pieces. As compared to the convex decomposition based algorithm used in Bullet, our PD computation algorithm is about
-an order of magnitude faster. We use the standard implementation of  contact normal and collision response forces computation available in Bullet.
+(1) interlocking $10$ rings; (2) a rainfall of $1,000$ rings; and (3) collapse of a tower composed of $5,500$ rings.
+Each ring consists of $256$ triangles and is decomposed into $16$ convex pieces for convex-decomposition.
+We precompute the $\LCS$ approximation for a 6-DOF $\Cspace$ and use the approximate result to perform PD queries during the simulation.
+Compared to the convex decomposition based algorithm used in Bullet, our PD computation algorithm is about
+an order of magnitude faster. We use the standard implementation of contact normal and collision response forces computation available in Bullet.
 
 \textbf{Complex 3D Models}:
-We have evaluated the performance of algorithm on many complex models corresponding to cup-spoon, moving teeth, bunnies, dragons and Buddha models (see Figure~\ref{fig:2:demo}). The exact motion trajectories are shown in the video and we performed $\LCS$ computation in 6D space. We observe more than an order of magnitude performance improvement than prior methods.
-
+We evaluated the performance of our algorithm on many complex models corresponding to the cup-spoon, moving teeth, bunnies, dragons, and Buddha models (Figure~\ref{fig:2:demo}) where we performed $\LCS$ computation for the 6-D $\Cspace$. We observed more than an order of magnitude performance improvement compared to prior methods.
 
 
 \begin{figure}[t]
@@ -622,7 +613,7 @@ We have evaluated the performance of algorithm on many complex models correspond
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=1]{figs/2/comparison/PD_bunny_bunny.pdf}}\\
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=2]{figs/2/comparison/PD_bunny_bunny.pdf}}
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=3]{figs/2/comparison/PD_bunny_bunny.pdf}}
-  \caption[The performance and accuracy comparison between learning-based PD algorithm and PolyDepth on bunny-bunny benchmark]{The performance and accuracy comparison with PolyDepth~\protect\cite{Je:2012:PRP} on bunny-bunny benchmark. (a) computational time (on average, 0.10ms based on our algorithm vs. 7.15ms in PolyDepth); (b) accuracy comparison between our interactive algorithm vs. offline algorithm based on Minkowski sum~\protect\cite{Lien:2009:ASM}; (c) accuracy comparison of PD computation between our algorithm vs. PolyDepth; (d) our global PD algorithm (blue) has lower error as compared to PolyDepth that performs local optimization. }\label{fig:2:bunnymodels}
+  \caption[The performance and accuracy compared to PolyDepth on bunny-bunny benchmark]{The performance and accuracy compared to PolyDepth~\protect\cite{Je:2012:PRP} on the bunny-bunny benchmark. (a) computational time (on average, 0.10ms based on our algorithm vs. 7.15ms in PolyDepth); (b) accuracy comparison between our interactive algorithm vs. an offline algorithm based on Minkowski sum~\protect\cite{Lien:2009:ASM}; (c) accuracy comparison of PD computation between our algorithm vs. PolyDepth; (d) our global PD algorithm (blue) has lower error compared to PolyDepth, which performs local optimization. }\label{fig:2:bunnymodels}
 \end{figure}
 
 \begin{figure}[htb]
@@ -631,58 +622,58 @@ We have evaluated the performance of algorithm on many complex models correspond
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=1]{figs/2/comparison/PD_dragon_dragon.pdf}}\\
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=2]{figs/2/comparison/PD_dragon_dragon.pdf}}
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=3]{figs/2/comparison/PD_dragon_dragon.pdf}}
-  \caption[The performance and accuracy comparison between learning-based PD algorithm and PolyDepth on dragon-dragon benchmark]{The performance and accuracy comparison with PolyDepth~\protect\cite{Je:2012:PRP} on dragon-dragon benchmark. (a) computational time (on average, 0.12ms based on our algorithm vs. 9.86ms in PolyDepth); (b) accuracy comparison between our interactive algorithm vs. offline algorithm based on Minkowski sum~\protect\cite{Lien:2009:ASM}; (c) accuracy comparison of PD computation between our algorithm vs. PolyDepth; (d) our global PD algorithm (blue) has lower error as compared to PolyDepth that performs local optimization.}\label{fig:2:dragonmodels}
+  \caption[The performance and accuracy compared to PolyDepth on dragon-dragon benchmark]{The performance and accuracy compared to PolyDepth~\protect\cite{Je:2012:PRP} on the dragon-dragon benchmark. (a) computational time (on average, 0.12ms based on our algorithm vs. 9.86ms in PolyDepth); (b) accuracy comparison between our interactive algorithm vs. an offline algorithm based on Minkowski sum~\protect\cite{Lien:2009:ASM}; (c) accuracy comparison of PD computation between our algorithm vs. PolyDepth; (d) our global PD algorithm (blue) has lower error compared to PolyDepth, which performs local optimization.}\label{fig:2:dragonmodels}
 \end{figure}
 
 
 
 \subsection{Comparison with Prior Methods}
-Most practical algorithms perform local analysis of the intersection regions and
+Most existing practical algorithms perform local analysis of the intersection regions and
 compute local PD. Other techniques use distance fields and can be accelerated using GPUs. In practice, these techniques are quite fast and can also handle
 deformable models. On the other hand, our global PD algorithm involves preprocessing and is mainly designed for rigid objects.
-The performance of our runtime query (e.g., about $0.1\sim2$ millisecond) is comparable or faster than these local PD computation algorithms. The main benefit of our approach over local PD methods is computation of global
+The performance of our runtime query (e.g., about $0.1\sim2$ milliseconds) is comparable to or faster than these local PD computation algorithms. The main benefit of our approach over local PD methods is the computation of global
 translational and rotational PD, which provides a more reliable measure of separating two overlapping objects.
 Other algorithms reduce PD computation to constrained optimization~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP}.
 In these techniques, a sequence of configuration samples on the contact space are iteratively
 computed until a local minimum configuration is found. The
 performance of these algorithms heavily relies on the initial guess of the configuration, and it is hard to provide
-error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{fig:2:dragonmodels}). Basically, they are useful for computing locally optimal PD
-between non-convex objects. The approximate PD computed by our global algorithm can be used as an initial guess for these optimization-based techniques and thereby improve their accuracy.
+error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{fig:2:dragonmodels}). The approximate PD computed by our global algorithm can be used as an initial guess for these optimization-based techniques and thereby improve their accuracy.
 
 
-In order to evaluate the error in our approximate PD computation algorithm, we need to compute very accurate (almost exact PD) between the two objects. For translational PD, the exact PD can be obtained by computing the Minkowski sum between two objects. However, for complex 3D objects like teeth or dragon, it is very hard to compute exact Minkowski sum due to its combinatorial complexity. Instead we use the point-based algorithm~\cite{Lien:2009:ASM} to approximate the PD and estimate the error of our algorithm.
-For generalized PD, the exact PD computation is even harder. Therefore, we approximate the exact contact space by many slices of Minkowski sums. Intuitively speaking, we sample many rotations in rotation space and then compute Minkowski sums for all the rotations. The combination of these Minkowski sums is used as an approximation of the contact space. We label the accurate PD computed using these offline techniques as "\emph{nearly exact PD}" for our algorithm and comparisons.
-In practice, our approach is more than an order of magnitude faster than other algorithms that are based on convex decomposition (e.g., \cite{Kim:2002:FPD} for $\PDt$; \cite{Zhang:2007:GPD} for $\PDg$) or point-based approximations. We have compared the runtime performance of our algorithm with these prior global methods in Figure~\ref{fig:2:performancecomparison}. More benchmarks, results and comparison are given in the supplementary material.
+In order to evaluate the error in our approximate PD computation algorithm, we compute very accurate PD between two objects. For translational PD, the exact PD can be obtained by computing the Minkowski sum between two objects. 
+It is difficult to compute exact Minkowski sum for complex 3D objects like the teeth or dragon, due to the combinatorial complexity arises. Instead we use the point-based algorithm~\cite{Lien:2009:ASM} to approximate the PD and estimate the error of our algorithm.
+For generalized PD, the exact PD computation is even harder. Therefore, we approximate the exact contact space with many slices of Minkowski sums. Intuitively, we sample many rotations in rotation space and then compute Minkowski sums for all the rotations. The combination of these Minkowski sums is used as an approximation of the contact space. We label the PD computed using these offline techniques as "\emph{nearly exact PD}" for our algorithm and comparisons.
+In practice, our approach is more than an order of magnitude faster than other algorithms that are based on convex decomposition (e.g., \cite{Kim:2002:FPD} for $\PDt$; \cite{Zhang:2007:GPD} for $\PDg$) or point-based approximations. We have compared the runtime performance of our algorithm with these prior global methods in Figure~\ref{fig:2:performancecomparison}. More benchmarks, results, and comparisons are given in the supplementary material.
 
 
 \section{Limitations and Conclusions}
-We have presented a novel approach to the computation of translational and generalized PD between polygonal models.
+We have presented a novel approach for the computation of translational and generalized PD between polygonal models.
 The main idea is to sample the configuration space and approximate the contact space based on
 machine learning classifiers. We use support vector machines to approximate the contact space, and
 the runtime PD query is reduced to nearest neighbor computation. Furthermore,
-we use active learning techniques to select the samples during precomputation.
-The overall approach is general and applicable to all polygonal models.
-We have demonstrated the interactive performance of our algorithm on complex, non-convex models and  have also used
-them for collision response in game physics engines.
+we use active learning techniques to select the samples when approximating the contact space.
+Our overall approach is general and applicable to all polygonal models.
+We have demonstrated the interactive performance of our algorithm on complex, non-convex models and have also used
+our algorithm for collision response in game physics engines.
 To the best of our knowledge, this is the first approach that is able to compute global and reliable PD between rigid models at
 interactive rates.
 
 
 Our approach has a few limitations. The precomputation phase is performed for every object pair in the simulation.
-In the worst case, its complexity can grow as a quadratic function of the number of objects in the simulation.
-The accuracy and running time of  our learning phase is a function of the combinatorial complexity of the contact
-space and the sampling scheme. It is possible that our method may not generate sufficient number of samples in small,
-isolated components of contact space, or may take a high number of iterations.
-The overall approach is probabilistic, and all our error bounds are derived in terms of expected error.
-Many times the solution to the penetration depth  problem (Section 3.1) is not unique or differentiable. Since we compute
+Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation.
+In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
+space and the sampling scheme. Hence, it is possible that our method may not generate a sufficient number of samples in small,
+isolated components of contact space, or it may take a large number of iterations.
+Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
+Finally, the solution to the penetration depth problem (Section 3.1) is often not unique or differentiable. Since we compute
 a bounded-error approximation of PD, there could be multiple solutions that satisfy those error bounds.
 This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD  computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
 
 
-There are many avenues for future work, including overcoming the stated limitations. The basic components of our learning and run-time phases, such as SVM learning, collision detection, and nearest-neighbor computation, can be accelerated using GPU parallelism. We can use other active learning techniques to improve the sampling as well as other classifiers or learning techniques to improve the accuracy or convergence of \LCS. It would be useful to derive tight theoretical error bounds (e.g., Theorem~1) for active learning algorithms based on exploitation-and-exploration.
-It would also be useful to extend the approach to articulated models that takes into account self-collisions between various links.
-In order to handle deformable models, we would like to develop incremental techniques that can refine the contact
-space approximation for deforming objects. It would be useful to this approach for other PD formulations, such as penetration volume~\cite{Weller-RSS-09}, which can result in continuous response forces. We also need improved algorithms for collision response that can guarantee collision-free simulations for interactive applications.
+There are many avenues for future work, including overcoming the stated limitations. The basic components of our learning and run-time phases, such as SVM learning, collision detection, and nearest-neighbor computation, can be accelerated using GPU parallelism. We can use other active learning techniques to improve the sampling as well as other classifiers or learning techniques to improve the accuracy or convergence of \LCS. It would also be useful to derive tight theoretical error bounds (e.g., Theorem~1) for active learning algorithms based on exploitation and exploration.
+It would also be useful to extend the approach to articulated models that take into account self-collisions between various links.
+In order to handle deformable models, we aim to develop incremental techniques that can refine the contact
+space approximation for deforming objects. It would be useful to apply this approach for other PD formulations, such as penetration volume~\cite{Weller-RSS-09}, which can result in continuous response forces. We also need improved algorithms for collision response that can guarantee collision-free simulations for interactive applications.
 
 \begin{figure}
 \centering
@@ -698,7 +689,7 @@ space approximation for deforming objects. It would be useful to this approach f
   \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/dragon_dragon.png}}
   \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/buddha_buddha20K.png}}
 }
-\caption[Learning-based PD computation algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects]{Our algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects. (a) Dynamic simulation of angry bird characters falling into a complex chute in Box2D physics engine; (b) rainfall of $1,000$ rings in Bullet physics engine; (c) a star and a spoon; (d) a spoon and a cup; (e) multiple contacts between upper and lower teeth (each has more than $40,000$ triangles). (f-h) benchmarks consisting of complex models (bunny, dragon and Buddha models have $70K$, $230K$ and $1M$ triangles, respectively). Our PD algorithm takes less than $0.1\sim2$ milliseconds, with less than 2-3\% relative error, for each pair of overlapping objects.}\label{fig:2:demo}
+\caption[Learning-based PD computation algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects]{Our algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects. (a) Dynamic simulation of angry bird characters falling into a complex chute in the Box2D physics engine; (b) rainfall of $1,000$ rings in the Bullet physics engine; (c) a star and a spoon; (d) a spoon and a cup; (e) multiple contacts between upper and lower teeth (each has more than $40,000$ triangles). (f-h) benchmarks consisting of complex models (bunny, dragon and Buddha models have $70K$, $230K$ and $1M$ triangles, respectively). For each pair of overlapping objects, our PD algorithm takes less than $0.1\sim2$ milliseconds, with less than 2-3\% relative error.}\label{fig:2:demo}
 \end{figure}
 
 
@@ -739,8 +730,8 @@ space approximation for deforming objects. It would be useful to this approach f
     \end{tabular}
 }
   \caption[Performance of the learning-based PD algorithm on 2D and 3D models]{
-Performance of our PD algorithm on 2D and 3D models: The learning phase includes the number of samples, size of support vectors, final memory (KB) usage and precomputation time.
-We also give a timing breakdown of runtime query. The PD error is computed by comparing the accuracy of $\overline{\text{PD}}$ with prior algorithms used for PD computations. For accurate $\PDt$ computation, we use the accurate, offline algorithm of~\protect \cite{Lien:2009:ASM} or using a combination of convex decomposition and Minkowski sums.   Since no accurate and efficient algorithms are known for many PD queries (e.g., $\PDt$ computation for non-closed meshes like teeth model; $\PDg$ computation for 3D models), we don't analyze the accuracy of our algorithm in such cases (shown as N/A). }\label{tab:2:learningperformance}
+Performance of our PD algorithm on 2D and 3D models: The learning phase includes the number of samples, size of support vectors, final memory usage (KB), and precomputation time.
+We also give a timing breakdown of runtime queries. The PD error is computed by comparing the accuracy of $\overline{\text{PD}}$ with prior algorithms used for PD computations. For accurate $\PDt$ computation, we use the accurate, offline algorithm of~\protect \cite{Lien:2009:ASM} or use a combination of convex decomposition and Minkowski sums.   Since no accurate and efficient algorithms are known for many PD queries (e.g., $\PDt$ computation for non-closed meshes like teeth model; $\PDg$ computation for 3D models), we do not analyze the accuracy of our algorithm in such cases (shown as N/A). }\label{tab:2:learningperformance}
 \end{table}
 
 

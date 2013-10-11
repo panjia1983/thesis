@@ -403,7 +403,7 @@ which implies $T_N(n) = \Theta(T_S(n))$.
 According to the analysis in Section~\ref{sec:5:algorithm:packet}, we know that the expected complexity $\hat{W}(i)$ for $i$-th BVTT traversal in configuration-packet method (Algorithm~\ref{algo:5:configuration-packet}) should be smaller than $W(i)$ because of the near-optimal traversing order. Moreover, the clustering strategy is similar to ordering different BVTTs, so that the BVTTs with similar traversal paths are arranged closely to each other and thus the probability is higher that they would be distributed on the same GPU core. In practice, we can not implement such an ordering exactly
 because the complexity of BVTT traversal is not known a priori. Therefore the complexity of Algorithm~\ref{algo:5:configuration-packet} is $$T_P(n) \approx \sum_{k=1}^a \hat{W}^*(kp),$$ with $\hat{W}^* \leq W^*$. As a result, we have $T_P(n) \leq T_N(n)$.
 
-The complexity for workload balancing method (Algorithm~\ref{algo:5:balancing}) can be given as: $$T_B(n) = \frac{\sum_{i=1}^n W(i)}{p} + B(n),$$ where the first item is the timing complexity for BVTT traversal and the second item $B(n)$ is the timing complexity for balancing step. As $B(n) > 0$, the acceleration ratio of GPU with $p$-processors is less than $p$. We need to reduce the load of balancing step to improve the efficiency of Algorithm~\ref{algo:5:balancing}. If balancing step is implemented efficiently, i.e. if $B(n) = o(T_S(n))$, we have $T_N(n) \geq T_P(n) \geq T_B(n)$.
+The complexity for workload balancing method (Algorithm~\ref{algo:5:balancing}) can be given as: $$T_B(n) = \frac{\sum_{i=1}^n W(i)}{p} + B(n),$$ where the first item is the time complexity for BVTT traversal and the second item $B(n)$ is the time complexity for balancing step. As $B(n) > 0$, the acceleration ratio of GPU with $p$-processors is less than $p$. We need to reduce the load of balancing step to improve the efficiency of Algorithm~\ref{algo:5:balancing}. If balancing step is implemented efficiently, i.e. if $B(n) = o(T_S(n))$, we have $T_N(n) \geq T_P(n) \geq T_B(n)$.
 \end{proof}
 
 
@@ -572,7 +572,7 @@ manual self-collision (GPU) & 391 & 392 \\ \hline
 In this chapter, we introduce two novel parallel collision query algorithms for real-time motion planning on GPUs.
 The first algorithm is based on configuration-packet tracing, is easy to implement, and can improve the parallel
 performance by performing more coherent traversals and reducing the memory consumed by traversal stacks. It can provide
-more than 50\% speed-up as compared to simple parallel methods. The second algorithm is based on workload balancing, and
+more than 50\% speed-up compared to simple parallel methods. The second algorithm is based on workload balancing, and
 decomposes parallel collision queries into fine-grained tasks corresponding to  BVTT node operations. The algorithm
 uses a light-weight task-balancing strategy to guarantee that all GPU cores are fully utilized and achieves
 close to peak performance on GPUs. In practice, we observe 5-10X speed-up. The new collision algorithms can improve
