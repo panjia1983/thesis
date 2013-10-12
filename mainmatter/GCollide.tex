@@ -3,7 +3,7 @@
 
 
 \section{Introduction}
-It is known that a significant fraction (e.g. $90\%$ or more) of randomized sampling algorithms is
+It is known that a significant fraction (e.g., $90\%$ or more) of randomized sampling algorithms is
 spent in collision checking. This includes checking whether a given configuration is in free-space or not
 as well as connecting two free-space configurations using a local planning algorithm. In Chapter~\ref{chp:GPlanner}, we exploit the computational power and massive parallelism of commodity GPUs (graphics processing units) for almost real-time
 computation. As a result, we need to design appropriate parallel collision that can map well to GPUs.
@@ -41,8 +41,7 @@ algorithms~\cite{Lauterbach10} use work queues
 to parallelize the computation on multiple cores. All of these approaches are primarily designed to parallelize a
 single collision query.
 
-The capability to efficiently perform high numbers of collision queries is essential in motion planning algorithms, e.g.
-multiple collision queries in milestone computation and local planning. Some of the prior algorithms
+The capability to efficiently perform high numbers of collision queries is essential in motion planning algorithms, e.g., multiple collision queries in milestone computation and local planning. Some of the prior algorithms
 perform parallel queries in a simple manner: each thread handles a single collision query in an independent
 manner~\cite{Amato99,akinc+2003:prt-p}. Since current multi-core CPUs have the capability to perform \emph{multiple-instruction multiple-data} (MIMD) computations, these simple strategies can work well on CPUs.
 On the other hand, current GPUs offer high data parallelism and the ability to execute a high number of threads
@@ -57,7 +56,7 @@ some issues in designing efficient parallel algorithms to perform collision quer
 \subsection{Notation and Terminology}
 We define some terms and symbols used in the rest of this chapter.
 \begin{description}
-\item[chunk] The minimum number of threads that GPUs manage, schedule and execute in parallel, which is also called \emph{warp} in the GPU computing literature. The size of chunk (\emph{chunk-size} or \emph{warp-size}) is 32 on current NVIDIA GPUs (e.g. GTX 280 and 480).
+\item[chunk] The minimum number of threads that GPUs manage, schedule and execute in parallel, which is also called \emph{warp} in the GPU computing literature. The size of chunk (\emph{chunk-size} or \emph{warp-size}) is 32 on current NVIDIA GPUs (e.g., GTX 280 and 480).
 \item[block] The logical collection of GPU threads that can be executed on the same GPU core. These threads synchronize by using barriers
 and communicate via a small high-speed low-latency \emph{shared memory}.
 \item[BVH$_a$] The \emph{bounding volume hierarchy} (BVH) tree for model $a$. It is a binary tree with $L$ levels, whose nodes are ordered in the breadth-first order starting from the root node. The $i$-th BVH node is denoted as BVH$_a[i]$ and its children nodes are
@@ -130,7 +129,7 @@ The stack can be implemented using global memory or shared memory. Global memory
 which affects BVTT traversal. Shared memory access is much faster but it may be too small to hold
 the large stack for complex geometric models composed of thousands of polygons. Moreover, increasing the shared memory usage will limit the extent of parallelism.
 Second, different threads may traverse the BVTT tree with incoherent patterns: there are many branching
-decisions performed during the traversal (e.g. \textbf{loop}, \textbf{if}, \textbf{return} in the pseudo-code) and the traversal
+decisions performed during the traversal (e.g., \textbf{loop}, \textbf{if}, \textbf{return} in the pseudo-code) and the traversal
 flow of the hierarchy in different threads diverges quickly. Finally, different threads can have varying workloads; some may be
 busy with the traversal while other threads may have finished the traversal early and are idle because
 there is no BV overlap or a primitive collision has already been detected. These factors can affect the
@@ -155,7 +154,7 @@ In this section, we present two novel algorithms for efficient parallel collisio
 coherence of BVTT traversal for different threads. The second algorithm uses queue-based techniques and lightweight workload
 balancing to achieve higher parallel performance on the GPUs. In practice, the first method can provide 30\%-50\% speed up.
 Moreover, it preserves the per-thread per-query structure of the naive parallel strategy. Therefore, it is easy to implement
-and is suitable for cases where we need to perform some additional computations (e.g. retraction for handling narrow passages~\cite{Zhang08-ICRA}). The second method can provide 5-10X speed up, but is relatively more complex to implement.
+and is suitable for cases where we need to perform some additional computations (e.g., retraction for handling narrow passages~\cite{Zhang08-ICRA}). The second method can provide 5-10X speed up, but is relatively more complex to implement.
 
 
 \subsection{Parallel Collision-Packet Traversal}
@@ -169,8 +168,8 @@ algorithms on GPUs also need to avoid incoherent branches and varying workloads 
 In real-time ray tracing, one approach to handle the varying workloads and incoherent branches is the
 use of ray-packets~\cite{Gunther07,Aila2009}. In ray-tracing terminology, packet traversal implies that a group of
 rays follow
-exactly the same traversal path in the hierarchy. This is achieved by sharing the traversal stack (similar to the BVTT traversal stack in Algorithm~\ref{algo:5:naive}) among the rays in the same warp-sized packet (i.e. threads that fit in one chunk on the GPU), instead of each thread using an independent stack for a single ray.
-This implies that some additional nodes in the hierarchy may be visited during ray intersection tests, even though there are no intersections between the rays and those nodes. But the resulting traversal is coherent for different rays, because each node is fetched only once per packet. In order to reduce the number of computations (i.e. unnecessary node intersection tests), all the rays in one packet should be similar to one another, i.e. have similar traversal paths with few differing branches. For ray tracing, the packet construction is simple: as shown in Figure~\ref{fig:5:raypacket}, rays passing through the same pixel on the image space make a natural packet. We extend this idea to parallel collision checking and refer to our algorithm as \emph{multiple configuration-packet} method.
+exactly the same traversal path in the hierarchy. This is achieved by sharing the traversal stack (similar to the BVTT traversal stack in Algorithm~\ref{algo:5:naive}) among the rays in the same warp-sized packet (i.e., threads that fit in one chunk on the GPU), instead of each thread using an independent stack for a single ray.
+This implies that some additional nodes in the hierarchy may be visited during ray intersection tests, even though there are no intersections between the rays and those nodes. But the resulting traversal is coherent for different rays, because each node is fetched only once per packet. In order to reduce the number of computations (i.e., unnecessary node intersection tests), all the rays in one packet should be similar to one another, i.e., have similar traversal paths with few differing branches. For ray tracing, the packet construction is simple: as shown in Figure~\ref{fig:5:raypacket}, rays passing through the same pixel on the image space make a natural packet. We extend this idea to parallel collision checking and refer to our algorithm as \emph{multiple configuration-packet} method.
 
 \begin{figure}[htb]
   \centering
@@ -181,7 +180,7 @@ This implies that some additional nodes in the hierarchy may be visited during r
 \end{figure}
 
 The first challenge is to cluster similar collision queries or the configurations into groups, because unlike
-ray tracing, there are no natural packet construction rules for collision queries. In some cases, the sampling scheme (e.g. the adaptive sampling for lazy PRM) can provide natural group partitions. However, in most cases
+ray tracing, there are no natural packet construction rules for collision queries. In some cases, the sampling scheme (e.g., the adaptive sampling for lazy PRM) can provide natural group partitions. However, in most cases
 we need suitable algorithms to compute these clusters. Clustering algorithms are natural choices for such a task, which aims
 at partitioning a set $\mathcal{X}$ of $N$ data items $\{\mathbf{x}_i\}_{i=1}^N$ into $K$ groups $\{C_k\}_{k=1}^K$ such that the data items belonging to the same group are more ``similar" than the data items in different groups. The clustering algorithm
 used to group the configurations needs to satisfy some additional constraints: $|C_k| = \text{chunk-size}, 1\leq k \leq K$. That is, each cluster should fit in one chunk on GPUs, except for the last cluster and $K = \lceil \frac{N}{\text{chunk-size}} \rceil$. Using the formulation of $k$-means, the clustering problem can be formally described as:
@@ -208,7 +207,7 @@ the number of clusters is $$\sum_{k=1}^C \lceil \frac{S_k}{\text{chunk-size}}\rc
 of parallel collision queries. The configuration clustering method is illustrated in
 Figure~\ref{fig:5:collisionpacket}.
 
-Next we map each configuration-packet to a single chunk. Threads within one packet will traverse the BVTT synchronously, i.e. the algorithm works on one BVTT node $(x, y)$ at a time and processes the whole packet against the node. If $(x,y)$ is a leaf node, an exact intersection test is performed for each thread. Otherwise, the algorithm loads its children nodes and tests the BVs for overlap to determine the remaining traversal order, i.e. to select one child $(x_m, y_m)$ as the next BVTT node to be traversed for the entire packet. We select $(x_m, y_m)$ in a greedy manner: it corresponds to the child node that is classified as overlapping by most threads in the packet. We also push other children into the packet's traversal stack. In case no BV overlap is detected in all the
+Next we map each configuration-packet to a single chunk. Threads within one packet will traverse the BVTT synchronously: i.e., the algorithm works on one BVTT node $(x, y)$ at a time and processes the whole packet against the node. If $(x,y)$ is a leaf node, an exact intersection test is performed for each thread. Otherwise, the algorithm loads its children nodes and tests the BVs for overlap to determine the remaining traversal order, i.e., to select one child $(x_m, y_m)$ as the next BVTT node to be traversed for the entire packet. We select $(x_m, y_m)$ in a greedy manner: it corresponds to the child node that is classified as overlapping by most threads in the packet. We also push other children into the packet's traversal stack. In case no BV overlap is detected in all the
 threads or $(x,y)$ is a leaf node, $(x_m, y_m)$ would be the top element in the packet's traversal stack.  The traversal
 step is repeated recursively, until the stack is empty. Compared to Algorithm~\ref{algo:5:naive}, all the threads in one chunk share one
 traversal stack in shared memory, instead of using one stack for each thread. Therefore, the size of shared memory used
@@ -301,7 +300,7 @@ Since each thread performs simple tasks with few branches, our algorithm can mak
 if there is a sufficient number of tasks in all the work queues. However, during the BVTT traversal, the tasks
 are generated dynamically and thus different queues may have varying numbers of tasks and this can lead to an uneven workload among the GPU cores. We use a balancing algorithm that redistributes the tasks among work queues (Figure~\ref{fig:5:balance}). Suppose the number of tasks in each work queue is $$n_i, 1\leq i \leq Q.$$ Whenever there exists $i$ so that $n_i < T_l$ or $n_i > T_u$, we execute our balancing algorithm among all the queues and the number of tasks in each queue becomes $$n_i^* = \frac{\sum_{k=1}^Q n_k}{Q}, 1\leq i \leq Q,$$ where $T_l$ and $T_u$ are two thresholds (we use $\text{chunk-size}$ for $T_l$ and the $W-\text{chunk-size}$ for $T_u$, where $W$ is the maximum size of work queue).
 
-In order to handle $N$ collision queries simultaneously, we use several strategies, which are illustrated and compared in Figure~\ref{fig:5:gproximity-control}. First, we can repeat the single query algorithm~\cite{Lauterbach10} introduced above for each query. However, this has two main disadvantages. First, the GPU kernel has to be called $N$ times from the CPU, which is expensive for large $N$ (which can be $\gg 10000$ for sample-based motion planning). Secondly, for each query, work queues are initialized with only one item (i.e. the root node of the BVTT), therefore the GPU's computational power cannot be fully exploited at the beginning of each query, as shown in the slow ascending part in Figure~\ref{fig:5:gproximity-control}(a). Similarly, at the end of each query, most tasks have been finished and some of the GPU cores become idle, which corresponds to the slow descending part in Figure~\ref{fig:5:gproximity-control}(a).
+In order to handle $N$ collision queries simultaneously, we use several strategies, which are illustrated and compared in Figure~\ref{fig:5:gproximity-control}. First, we can repeat the single query algorithm~\cite{Lauterbach10} introduced above for each query. However, this has two main disadvantages. First, the GPU kernel has to be called $N$ times from the CPU, which is expensive for large $N$ (which can be $\gg 10000$ for sample-based motion planning). Second, for each query, work queues are initialized with only one item (i.e., the root node of the BVTT), therefore the GPU's computational power cannot be fully exploited at the beginning of each query, as shown in the slow ascending part in Figure~\ref{fig:5:gproximity-control}(a). Similarly, at the end of each query, most tasks have been finished and some of the GPU cores become idle, which corresponds to the slow descending part in Figure~\ref{fig:5:gproximity-control}(a).
 
 As a result, we use the strategy shown in Figure~\ref{fig:5:gproximity-control}(b): we divide the $N$ queries into $\lceil\frac{N}{M}\rceil$ different sets each of size $M$ with $M\leq N$ and initialize the work queues with $M$ different BVTT roots for each iteration. Usually $M$ cannot be $N$ because we need to use $t \cdot M$ GPU global memory to store the transform information for the queries, where constant $$t \leq \frac{\text{size of global memory}}{M}$$ and we usually use $M=50$. In this case, we only need to invoke the solution kernel $\lceil\frac{N}{M}\rceil$ times. The number of tasks available in the work queues changes more smoothly over time, with fewer ascending and descending parts, which implies higher
 throughput of the GPUs. Moreover, the work queues are initialized with many more tasks, which results in high performance at the beginning of each iteration. In practice, as nodes from more than one BVTT of different queries co-exist in the same queue, we need to distinguish them by representing each BVTT node by $(x,y,i)$ instead of $(x,y)$, where $i$ is the index of collision query. The details for this strategy are shown in Algorithm~\ref{algo:5:balancing:task}.
@@ -379,7 +378,7 @@ Suppose we are given $n$ collision queries, which means that we need to traverse
 $\Theta(T_S(n)) = T_N(n) \geq T_P(n) \geq T_B(n)$.
 \end{lemma}
 
-\begin{remark} In parallel computing, we say one parallel algorithm is \emph{work efficient}, if its complexity $T(n)$ is bounded both above and below asymptotically by $S(n)$, the complexity of its serial version, i.e. $T(n) = \Theta(S(n))$~\cite{Joesphbook}. In other words, Lemma~\ref{thm:5:analysis} means that all the three parallel collision algorithms are work-efficient, but the workload balancing is the most efficient and configuration-packet algorithm is more efficient than the naive parallel scheme.
+\begin{remark} In parallel computing, we say one parallel algorithm is \emph{work efficient}, if its complexity $T(n)$ is bounded both above and below asymptotically by $S(n)$, the complexity of its serial version, i.e., $T(n) = \Theta(S(n))$~\cite{Joesphbook}. In other words, Lemma~\ref{thm:5:analysis} means that all the three parallel collision algorithms are work-efficient, but the workload balancing is the most efficient and configuration-packet algorithm is more efficient than the naive parallel scheme.
 \end{remark}
 
 \begin{proof}
@@ -403,7 +402,7 @@ which implies $T_N(n) = \Theta(T_S(n))$.
 According to the analysis in Section~\ref{sec:5:algorithm:packet}, we know that the expected complexity $\hat{W}(i)$ for $i$-th BVTT traversal in configuration-packet method (Algorithm~\ref{algo:5:configuration-packet}) should be smaller than $W(i)$ because of the near-optimal traversing order. Moreover, the clustering strategy is similar to ordering different BVTTs, so that the BVTTs with similar traversal paths are arranged closely to each other and thus the probability is higher that they would be distributed on the same GPU core. In practice, we can not implement such an ordering exactly
 because the complexity of BVTT traversal is not known a priori. Therefore the complexity of Algorithm~\ref{algo:5:configuration-packet} is $$T_P(n) \approx \sum_{k=1}^a \hat{W}^*(kp),$$ with $\hat{W}^* \leq W^*$. As a result, we have $T_P(n) \leq T_N(n)$.
 
-The complexity for workload balancing method (Algorithm~\ref{algo:5:balancing}) can be given as: $$T_B(n) = \frac{\sum_{i=1}^n W(i)}{p} + B(n),$$ where the first item is the time complexity for BVTT traversal and the second item $B(n)$ is the time complexity for balancing step. As $B(n) > 0$, the acceleration ratio of GPU with $p$-processors is less than $p$. We need to reduce the load of balancing step to improve the efficiency of Algorithm~\ref{algo:5:balancing}. If balancing step is implemented efficiently, i.e. if $B(n) = o(T_S(n))$, we have $T_N(n) \geq T_P(n) \geq T_B(n)$.
+The complexity for workload balancing method (Algorithm~\ref{algo:5:balancing}) can be given as: $$T_B(n) = \frac{\sum_{i=1}^n W(i)}{p} + B(n),$$ where the first item is the time complexity for BVTT traversal and the second item $B(n)$ is the time complexity for balancing step. As $B(n) > 0$, the acceleration ratio of GPU with $p$-processors is less than $p$. We need to reduce the load of balancing step to improve the efficiency of Algorithm~\ref{algo:5:balancing}. If balancing step is implemented efficiently: i.e., if $B(n) = o(T_S(n))$, we have $T_N(n) \geq T_P(n) \geq T_B(n)$.
 \end{proof}
 
 
@@ -423,7 +422,7 @@ as the underlying planning algorithm as it is more suitable to exploit the multi
 
 \subsection{Implementation}
 As part of our implementation, we replace the collision detection module in gPlanner with the new algorithms described above.
-As observed in Chapter~\ref{chp:GPlanner}, more than 90\% time of the motion planning algorithm is spent in collision queries, i.e. milestone computation and local planning.
+As observed in Chapter~\ref{chp:GPlanner}, more than 90\% time of the motion planning algorithm is spent in collision queries, i.e., milestone computation and local planning.
 
 \begin{table}[htb]
 \begin{center}
@@ -456,11 +455,11 @@ random configurations. For milestone computation, we directly use our collision
 detection algorithm. For local planning, we first need to unfold all the interpolated configurations: we denote the
 BVTT for the $j$-th interpolated query between the $i$-th local path as BVTT$(i,j)$ and its node as $(x,y,i,j)$.
 In order to avoid unnecessary computations, we first add BVTT root nodes with small $j$ into the work queues,
-i.e. $(1,1,i,j) \prec (1,1,i',j')$, if$j < j'$. As a result, once a collision is computed at BVTT$(i, j_0)$,
+i.e., $(1,1,i,j) \prec (1,1,i',j')$, if$j < j'$. As a result, once a collision is computed at BVTT$(i, j_0)$,
 we need not traverse BVTT$(i, j)$ when $j > j_0$.
 
 For Algorithm~\ref{algo:5:naive} and Algorithm~\ref{algo:5:configuration-packet}, we further test the performance for
-different traversal sizes (i.e. $32$ and $128$). Both algorithms give correct results when using a larger stack size (i.e.
+different traversal sizes (i.e., $32$ and $128$). Both algorithms give correct results when using a larger stack size (i.e.,
 $128$). For smaller stack sizes, the algorithms will stop once the stack is filled.
 Algorithm~\ref{algo:5:naive} may report a collision when the stack overflows while Algorithm~\ref{algo:5:configuration-packet}
 returns a collision-free query. Therefore, Algorithm~\ref{algo:5:naive} may suffer from false positive errors while Algorithm~\ref{algo:5:configuration-packet}
@@ -515,7 +514,7 @@ collision results can be incorrect, which happens for the large-piano benchmarks
 increases to $128$. This is due to the fact that Algorithm~\ref{algo:5:configuration-packet} uses per-packet stack,
 which is about $32$ times smaller then using per-thread stack. Moreover, clustering and  configuration-packet traversal
 can result in more than 50\% speed-up. Moreover, the improvement in the performance of
-Algorithm~\ref{algo:5:configuration-packet} over Algorithm~\ref{algo:5:naive} is more on complex models (e.g. large-piano).
+Algorithm~\ref{algo:5:configuration-packet} over Algorithm~\ref{algo:5:naive} is more on complex models (e.g., large-piano).
 (2) Algorithm~\ref{algo:5:balancing} is usually the fastest one among all the variations of the three algorithms.
 It can result in more than 5-10X speedup over other methods.
 
@@ -532,9 +531,9 @@ As observed in Chapter~\ref{chp:GPlanner}, the performance of the planner in the
 dominated by milestone computation and local planning. Based on the novel collision detection algorithm, the performance of PRM
 and lazy PRM planners can be improved by at least 40\%-45\%.
 
-In Figure~\ref{fig:5:pump}, we also show how the pump kernel increases the GPU throughput (i.e. the number of
+In Figure~\ref{fig:5:pump}, we also show how the pump kernel increases the GPU throughput (i.e., the number of
 tasks available in work queues for GPU cores to fetch) in the workload balancing based Algorithm~\ref{algo:5:balancing}.
-The maximum throughput (i.e. the maximum number of BV overlap tests performed by GPU kernels) increases from $8\times 10^4$
+The maximum throughput (i.e., the maximum number of BV overlap tests performed by GPU kernels) increases from $8\times 10^4$
 to nearly $10^5$ and the minimum throughput increases from $0$ to $2.5\times 10^4$. For piano and helicopter models,
 we can compute a collision-free path from the initial to the goal configuration in $879$ms and $778$ms, respectively,
 using PRM or $72.79$ms or $72.68$ms, respectively, using lazy PRM.
@@ -543,7 +542,7 @@ using PRM or $72.79$ms or $72.68$ms, respectively, using lazy PRM.
 \subsection{Articulated Models}
 Our parallel algorithms can be directly applied to articulated models. In this case, checking for self-collisions among
 various links of a robot adds to the overall complexity. We use a model of the PR2 robot as an articulated
-benchmark. The PR2 robot model has 65 links and 75 DOFs. We only allow one arm (i.e. 12 DOFs) to be active in terms
+benchmark. The PR2 robot model has 65 links and 75 DOFs. We only allow one arm (i.e., 12 DOFs) to be active in terms
 of motion. A naive approach would involve exhaustive self-collision checking, and reduces to checking
 $65 \times (65-1)/2 = 2,080$ self-collisions among the links for each collision query.
 As shown in Table~\ref{tab:5:selfcollision}, GPU-based planner takes more than $10$ seconds for the PR2 benchmark when
@@ -580,5 +579,5 @@ the performance of GPU-based PRM planners by almost 50\%.
 
 There are many avenues for future work. We are interested in using more advanced sampling schemes with the
 GPU-based planner to further improve its performance and deal with narrow passages. Furthermore, we would like to
-modify the planner to generate smooth paths and integrate our planner with physical robots (e.g. PR2).
+modify the planner to generate smooth paths and integrate our planner with physical robots (e.g., PR2).
 We would also like to take into account kinematic and dynamic constraints.
