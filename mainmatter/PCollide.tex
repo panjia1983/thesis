@@ -6,23 +6,24 @@ The problems of collision detection and proximity computation are widely studied
 
 Most of the prior work on collision detection assumes an exact geometric description of the objects in the scene, typically represented as a polygon mesh. However, these methods may not work well
 for robots operating in real-world environments, where only partial observations of the environment are possible based on robot sensors. For example, inaccurate motor control makes a robot deviate from its
-exact configuration and the sensors tend to add noise to the environment measurements.
-Current robot sensors including cameras and LIDAR and new devices such as Kinect can easily generate detailed point cloud data of real-world environments. However, it is hard to directly use prior collision detection algorithms which perform a boolean query and compute a yes/no answer.
+exact configuration, and sensors tend to add noise to environment measurements.
+Current robot sensors (including cameras, LIDAR, and new devices such as the Kinect) can easily generate detailed point cloud data of real-world environments. However, it is hard to directly use exact collision detection algorithms, which perform a boolean query and compute a yes/no answer.
 Moreover, exact collision checking may not be suitable in terms of
 handling uncertainty in perception and control, which also causes uncertainty in collision results.
 For many robotics applications, such as grasping or motion planning, we need to reduce the risk
-of physical contacts between the robot and the environment that may result in damages. Hence, we need to develop methods that tend to minimize the probability of collisions. The point cloud collision/proximity algorithm can also improve many methods' feasibility and robustness in real world. For example, many algorithms in tactile manipulation, e.g.,~\cite{anna:2011}, require an exact or approximated mesh model of the manipulated object and our algorithm can help to extend them to point clouds captured from sensor.
+of physical contacts between the robot and the environment that may result in damage. Hence, we need to develop methods that minimize the probability of collisions. For this purpose, we require a collision or proximity algorithm that uses point cloud data. 
+This algorithm can also improve many methods' feasibility and robustness in real world. For example, many algorithms in tactile manipulation, e.g.,~\cite{anna:2011}, require an exact or approximated mesh model of the manipulated object; our algorithm can help extend these methods to work with easily-obtained point clouds instead of mesh models.
 
 \subsection{Main Results}
 In this chapter, we present a probabilistic collision detection algorithm that can handle environments with uncertainty.
 Our approach can handle noisy or inexact point data representations that are gathered using sensors.
 In order to handle point cloud data with noise, we reformulate the collision detection problem as a two-class classification problem,
-where points of different objects belong to different classes. The collision probability is directly related to the separability of the corresponding
+where points of different objects belong to different classes. The collision probability is then directly related to the separability of the corresponding
 two-class problem, which can be elegantly and efficiently solved using support vector machines (SVMs).
 We accelerate the computation using bounding volume hierarchies and perform a stochastic traversal of the hierarchies that takes into account noise and
-uncertainty. These hierarchies are updated for dynamic scenes or when the robot head or the gripper moves.
-Our probabilistic collision algorithm also estimates the contact points and contact normals.
-We test our algorithm on point clouds generated from PR2 sensors and synthetic data sets. Our method can provide robust results for probabilistic collision detection and its runtime performance is similar to that of hierarchy-based collision detection algorithms for triangle meshes (e.g., 500-1000ms for 10K points on a single CPU core).
+uncertainty. These hierarchies are updated for dynamic scenes and when the robot head or gripper moves.
+Our probabilistic collision algorithm also estimates contact points and contact normals.
+We test our algorithm on point clouds generated from PR2 sensors and synthetic data sets. Our method can provide robust results for probabilistic collision detection, and its runtime performance is similar to that of hierarchy-based collision detection algorithms for triangle meshes (e.g., 500-1000ms for 10K points on a single CPU core).
 
 
 
@@ -30,7 +31,7 @@ We test our algorithm on point clouds generated from PR2 sensors and synthetic d
   \centering
   \includegraphics[width=0.45\linewidth]{figs/7/labeled_small.png}
   \includegraphics[width=0.45\linewidth]{figs/7/labeled_in_collision_pip.png}
-  \caption[A visual representation of the collision information generated by the sensors on the PR2 robot]{\label{fig:7:pr2} A visual representation of the collision information generated by the sensors on the PR2 robot. (Left) The environment includes the points in a collision map (in light blue), mesh representations for known objects detected through visual sensing (green cylindrical object on table), and an exact geometric representation of the table surface (green flat surface). A detailed mesh model for the robot is also seen in the picture. (Right) A representation of the collision points (shown by red spheres) between the gripper and the object on the table.
+  \caption[A visual representation of the collision information generated by the sensors on the PR2 robot]{\label{fig:7:pr2} A visual representation of the collision information generated by sensors on the PR2 robot. (Left) The environment includes the points in a collision map (in light blue), mesh representations for known objects detected through visual sensing (the green cylindrical object on table), and an exact geometric representation of the table surface (the green flat surface). A detailed mesh model for the robot is also seen in the picture. (Right) A representation of the collision points (shown by red spheres) between the gripper and the object on the table.
 We use our probabilistic algorithm for robust collision checking with noisy point clouds at interactive rates.}
 \end{figure}
 
@@ -42,9 +43,9 @@ We evaluate the performance of our algorithm on different benchmarks in Section~
 
 \section{Related Work}
 \label{sec:7:related}
-The field of probabilistic robotics provides a mathematical framework to handle the uncertainty that exists
+The field of probabilistic robotics provides a mathematical framework for handling the uncertainty that exists
 in the physical world~\cite{PR:2005}.  It deals with representing uncertainty explicitly using the calculus of probability distribution
-and obtain robust control choices relative to the uncertainty in the robot system. Probabilistic robotics can handle perception uncertainty (or environment uncertainty) due to sensor and action errors. However, previous approaches tend to use simple methods to model environment uncertainty, such as feature-based methods or occupancy grid based methods. These models can only provide a rough description of the environment while many robot actions (e.g., grasping) require more detailed information for robust computation.
+and obtaining robust control choices relative to the uncertainty in the robot system. Probabilistic robotics can handle perception uncertainty (or environment uncertainty) due to sensor and action errors. However, previous approaches tend to use simple methods to model environment uncertainty, such as feature-based methods or occupancy grid based methods. These models can only provide a rough description of the environment, while many robot actions (e.g., grasping) require more detailed information for robust computation.
 
 \subsection{Uncertainty of Point Cloud Data}
 \label{sec:7:related:data}
