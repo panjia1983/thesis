@@ -646,7 +646,36 @@ For generalized PD, the exact PD computation is even harder. Therefore, we appro
 In practice, our approach is more than an order of magnitude faster than other algorithms that are based on convex decomposition (e.g., \cite{Kim:2002:FPD} for $\PDt$; \cite{Zhang:2007:GPD} for $\PDg$) or point-based approximations. We have compared the runtime performance of our algorithm with these prior global methods in Figure~\ref{fig:2:performancecomparison}. More benchmarks, results, and comparisons are given in the supplementary material.
 
 
-\section{Limitations and Conclusions}
+\section{Limitations}
+Our approach has a few limitations. The precomputation phase is performed for every object pair in the simulation.
+Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation.
+In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
+space and the sampling scheme. Hence, it is possible that our method may not generate a sufficient number of samples in small,
+isolated components of contact space, or it may take a large number of iterations.
+Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
+Finally, the solution to the penetration depth problem (Section 3.1) is often not unique or differentiable. Since we compute
+a bounded-error approximation of PD, there could be multiple solutions that satisfy those error bounds.
+This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD  computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
+
+TODO: (two pages).
+
+-1. write something about the sampling (center)
+
+0. Theoritically, it can change any types of objects, once collision checking routine is supported. open/close mesh and so on. However, in pratice, it still have several limitations. 
+
+1. hard-margin SVM. In practice, using soft-margin SVM using large C. large C, close to hard-margin, but surface is noisy. small C, may have larger error, smooth mesh. But will result in large error in PD. Need tune C to find the best C.
+
+2. metric: given two configuration q1, and q2, compute the relative configuration. q then find the closest qc, but qc * q is closest to q2? if give rotation large weight-->find the rotation closest to query, but the resulting PD is large. If given rotation small weight --> rotation far from query may have small PD.   not trivial. THe PD metric we used: not scale: $I = mr^2 / V = r^2$.
+
+3. noisy a) When configuration space average error is small, the PD error usually is small. but error is not distributed uniformly. and PD error is much larger than configuration space error. As PD is analogous to the directive of the C-space.   b) rotation a bit, will have larger error, why? discrete sample
+
+4. to generate a smooth motion, need much more samples than the number of samples required. (show some result)
+
+$\cap_i\{\mathbf q: J(\mathbf q_i, \mathbf q_{i+1}) = 0\} \cap (\cup_i \{\mathbf q: f(\mathbf q_i) > 0\})$
+
+
+
+\section{Conclusions}
 We have presented a novel approach for the computation of translational and generalized PD between polygonal models.
 The main idea is to sample the configuration space and approximate the contact space based on
 machine learning classifiers. We use support vector machines to approximate the contact space, and
@@ -657,17 +686,6 @@ We have demonstrated the interactive performance of our algorithm on complex, no
 our algorithm for collision response in game physics engines.
 To the best of our knowledge, this is the first approach that is able to compute global and reliable PD between rigid models at
 interactive rates.
-
-
-Our approach has a few limitations. The precomputation phase is performed for every object pair in the simulation.
-Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation.
-In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
-space and the sampling scheme. Hence, it is possible that our method may not generate a sufficient number of samples in small,
-isolated components of contact space, or it may take a large number of iterations.
-Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
-Finally, the solution to the penetration depth problem (Section 3.1) is often not unique or differentiable. Since we compute
-a bounded-error approximation of PD, there could be multiple solutions that satisfy those error bounds.
-This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD  computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
 
 
 There are many avenues for future work, including overcoming the stated limitations. The basic components of our learning and run-time phases, such as SVM learning, collision detection, and nearest-neighbor computation, can be accelerated using GPU parallelism. We can use other active learning techniques to improve the sampling as well as other classifiers or learning techniques to improve the accuracy or convergence of \LCS. It would also be useful to derive tight theoretical error bounds (e.g., Theorem~1) for active learning algorithms based on exploitation and exploration.
