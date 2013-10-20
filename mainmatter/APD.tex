@@ -2,6 +2,7 @@
 \label{chp:APD}
 
 \section{Introduction}
+\label{sec:2:intro}
 Computing a high-quality configuration space representation is important for many applications, such as robotics~\cite{LPT:SpatialPlanning:1983}, physically-based simulation~\cite{Je:2012:PRP}, Minkowski sums~\cite{Varadhan:2006:TPA}, and offset computation~\cite{Choi:1997:CAD}. 
 However, to compute an exact representation for a configuration space is time-consuming, because the complexity of this problem grows exponentially in the dimension of the configuration space. As a result, it remains a major challenge to represent and compute configuration spaces, especially for high dimensional ones.
 
@@ -86,7 +87,7 @@ where $(q_1, q_2, q_3)$ and $(q_4, q_5, q_6)$ measure the relative rotation and 
 \begin{align}
 \mu_1 = \frac{4}{\vol}I_{xx}, \ \ \  \mu_2 = \frac{4}{\vol}I_{yy}, \ \ \  \mu_3 = \frac{4}{\vol}I_{zz},
 \end{align}
-where $\diag(I_{xx}, I_{yy}, I_{zz})$ represents the diagonal of the inertia matrix of object $A$ and $\vol$ is the volume of object $A$. For closed models, the volume $\vol$ is computed based on a tetrahedral decomposition computed using an interior point. For other models, we use the volume of its bounding sphere. Note that a weighted metric is application dependent and we can adjust the relative weight of the translational and rotational component.
+where $\diag(I_{xx}, I_{yy}, I_{zz})$ represents the diagonal of the inertia matrix of the object $A$ and $\vol$ is the volume of the object $A$. 
 
 
 \subsection{Approximate $\Ccont$ Computation}
@@ -131,15 +132,19 @@ are shown in Figure~\ref{fig:2:pipeline}.
 \subsection{Initial Sampling}
 \label{sec:2:offline:uniform}
 
-We perform uniform sampling in $\Cspace$ to obtain a set of configuration points.  Rather than sampling the entire $\Cspace$,
-we generate samples in a subspace that contains $\Ccont$. Given two objects $A$ and $B$, the contact space $\Ccont$ is contained in the
-in-collision space of their bounding volumes $BV(A)$ and $BV(B)$. We choose to use
+We perform uniform sampling in $\Cspace$ to obtain a set of configuration points. Rather than sampling the entire $\Cspace$,
+we generate samples in a subspace that contains $\Ccont$. Given two objects $A$ and $B$, the contact space $\Ccont$ is contained in the in-collision space of their bounding volumes $BV(A)$ and $BV(B)$. We choose to use
 axis-aligned bounding boxes (AABB) as the underlying BVs for $\PDt$
 computation, due to their translational invariance in $\Rsqr$
 and $\Rcubic$. Similarly, we use spheres as the underlying BVs for $\PDg$
 computation due to their translational and rotational invariance in
 $\SEsqr$ and $\SEcubic$.
 
+The uniform sampling in the in-collision space of $BV(A)$ and $BV(B)$ can be implemented as follows. 
+For $\PDt$ computation, the in-collision space of $BV(A)$ and $BV(B)$ is a box region, since it is the Minkowski sum of two axis-aligned bounding boxes. Samples uniformly distributed within this box region are guaranteed to cover the entire $\Ccont$.
+
+For $\PDg$ computation, suppose that the given two bounding spheres are $(\mathbf c_A, r_A)$ and
+$(\mathbf c_B, r_B)$, where $\mathbf c$ denotes a sphere center and $r$ denotes a sphere radius. We generate configuration samples for which these two bounding spheres are in collision. These samples correspond to all $(\mathbf R, \mathbf T)$ satisfying $\|\mathbf R \mathbf c_B + \mathbf T - \mathbf c_A\|_2 \leq r_A + r_B$, where $\mathbf R$ and $\mathbf T$ are the rotational and translational components of a configuration $\mathbf q$. We first generate one sample for the rotational component $\mathbf R$. For 2D rotation, we simply perform the uniform sampling within $[0, 2\pi]$; for 3D rotation, we use the method presented in~\cite{Shoemake:1992:URR} to sample $SO(3)$ uniformly. After a random $\mathbf R$ is computed, the translational component $\mathbf T$ is uniformly distributed within a sphere $\|\mathbf T - (\mathbf c_A - \mathbf R \mathbf c_B)\| \leq r_A + r_B$; the uniform sampling within a sphere can be implemented using the well-known inverse-transform method. By repeating the above process many times, we can generate a sequence of $(\mathbf R, \mathbf T)$ uniformly distributed within the contact space of $A$ and $B$'s bounding spheres.
 
 \subsection{Compute $\LCSa$} \label{sec:2:offline:model}
 Given a set of $k$ samples from
@@ -647,19 +652,23 @@ In practice, our approach is more than an order of magnitude faster than other a
 
 
 \section{Limitations}
-Our approach has a few limitations. The precomputation phase is performed for every object pair in the simulation.
-Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation.
-In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
+Our approach is the first attempt at using machine learning techniques to improve the peformance and quality of penetration-depth computation. In order to make this method useful for real-world applications, we need to solve some important limitations. In our discussion, we divide these limitations into two categories: limitations related with approximate configuration space computation, and limitations related with approximate penetration-depth computation.
+
+\subsection{Limitations Related with Approximate Configuration Space Computation}
+The first limitation related with approximate configuration space computation is that the precomputation phase must be performed for each pair of moving objects in the simulation. Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation. In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
 space and the sampling scheme. Hence, it is possible that our method may not generate a sufficient number of samples in small,
 isolated components of contact space, or it may take a large number of iterations.
 Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
+
+In Section~\ref{sec:2:intro}, we claimed that our method is general and is able to compute the contact space for complex non-convex and non-manifold models. However, this claim is based on the implicit assumption that a `correct' collision detection routine is available for input geometric data.
+
+\subsection{Limitations Related with Approximate Penetration-depth Computation}
+
 Finally, the solution to the penetration depth problem (Section 3.1) is often not unique or differentiable. Since we compute
 a bounded-error approximation of PD, there could be multiple solutions that satisfy those error bounds.
 This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD  computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
 
 TODO: (two pages).
-
--1. write something about the sampling (center)
 
 0. Theoritically, it can change any types of objects, once collision checking routine is supported. open/close mesh and so on. However, in pratice, it still have several limitations. 
 
@@ -672,6 +681,8 @@ TODO: (two pages).
 4. to generate a smooth motion, need much more samples than the number of samples required. (show some result)
 
 $\cap_i\{\mathbf q: J(\mathbf q_i, \mathbf q_{i+1}) = 0\} \cap (\cup_i \{\mathbf q: f(\mathbf q_i) > 0\})$
+
+5. geometric algorithms, should be useful for haptics, need main change (velocity) to apply to physically-based simulation.
 
 
 
