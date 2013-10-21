@@ -62,6 +62,7 @@ In this section, we introduce our notation and give an overview of our approach.
 As we mentioned in Section~\ref{chp:intro}, the contact space $\Ccont$ is the boundary of $\Cobs$ and is denoted as $\Ccont =\partial \Cobs$. We use the notation $c(\q) \in \{-1,+1\}$ to denote the collision state of a configuration $\q$, i.e., $c(\q)=+1$ if $\q \in \Cobs$ and $c(\q)=-1$ if $\q \in \Cfree$.
 
 \subsubsection{PD Formulation}
+\label{sec:2:overview:pdformulation}
 We define global penetration depth as the minimum motion or transformation required to separate two intersecting objects $A$ and $B$~\cite{Agarwal:2000:CPD,Kim:2002:DEEP}:
 
 \begin{align}
@@ -144,7 +145,7 @@ The uniform sampling in the in-collision space of $BV(A)$ and $BV(B)$ can be imp
 For $\PDt$ computation, the in-collision space of $BV(A)$ and $BV(B)$ is a box region, since it is the Minkowski sum of two axis-aligned bounding boxes. Samples uniformly distributed within this box region are guaranteed to cover the entire $\Ccont$.
 
 For $\PDg$ computation, suppose that the given two bounding spheres are $(\mathbf c_A, r_A)$ and
-$(\mathbf c_B, r_B)$, where $\mathbf c$ denotes a sphere center and $r$ denotes a sphere radius. We generate configuration samples for which these two bounding spheres are in collision. These samples correspond to all $(\mathbf R, \mathbf T)$ satisfying $\|\mathbf R \mathbf c_B + \mathbf T - \mathbf c_A\|_2 \leq r_A + r_B$, where $\mathbf R$ and $\mathbf T$ are the rotational and translational components of a configuration $\mathbf q$. We first generate one sample for the rotational component $\mathbf R$. For 2D rotation, we simply perform the uniform sampling within $[0, 2\pi]$; for 3D rotation, we use the method presented in~\cite{Shoemake:1992:URR} to sample $SO(3)$ uniformly. After a random $\mathbf R$ is computed, the translational component $\mathbf T$ is uniformly distributed within a sphere $\|\mathbf T - (\mathbf c_A - \mathbf R \mathbf c_B)\| \leq r_A + r_B$; the uniform sampling within a sphere can be implemented using the well-known inverse-transform method. By repeating the above process many times, we can generate a sequence of $(\mathbf R, \mathbf T)$ uniformly distributed within the contact space of $A$ and $B$'s bounding spheres.
+$(\mathbf c_B, r_B)$, where $\mathbf c$ denotes a sphere center and $r$ denotes a sphere radius. We generate configuration samples for which these two bounding spheres are in collision. These samples correspond to all $(\mathbf R, \mathbf T)$ satisfying $\|\mathbf R \mathbf c_B + \mathbf T - \mathbf c_A\|_2 \leq r_A + r_B$, where $\mathbf R$ and $\mathbf T$ are the rotational and translational components of a configuration $\mathbf q$. We first generate one sample for the rotational component $\mathbf R$. For 2D rotation, we simply perform the uniform sampling within $[0, 2\pi]$; for 3D rotation, we use the method presented in~\cite{Shoemake:1992:URR} to sample $\SOcubic$ uniformly. After a random $\mathbf R$ is computed, the translational component $\mathbf T$ is uniformly distributed within a sphere $\|\mathbf T - (\mathbf c_A - \mathbf R \mathbf c_B)\| \leq r_A + r_B$; the uniform sampling within a sphere can be implemented using the well-known inverse-transform method. By repeating the above process many times, we can generate a sequence of $(\mathbf R, \mathbf T)$ uniformly distributed within the contact space of $A$ and $B$'s bounding spheres.
 
 \subsection{Compute $\LCSa$} \label{sec:2:offline:model}
 Given a set of $k$ samples from
@@ -163,6 +164,7 @@ Other options exist for computing the approximate contact space.
 One alternative is to use surface fitting techniques to approximate the contact space by an implicit function, but this becomes more challenging for high-dimensional configuration spaces (e.g., 6-DOF $\Cspace$). Another possibility is to use regression-based learning techniques to approximate the contact space. However, such techniques typically require an improved or continuous approximation of PD values at these samples, which is much harder to compute compared to discrete collision queries.
 
 \subsubsection{Nonlinear Classifier based on SVM}
+\label{sec:2:offline:svm}
 We use the SVM classifier~\cite{Vapnik:1995:NSL} to learn $\LCSa$ from
 the initial sampling of $k$ configurations.
 A SVM generates a decision function that is a smooth nonlinear surface. We use the
@@ -660,29 +662,57 @@ space and the sampling scheme. Hence, it is possible that our method may not gen
 isolated components of contact space, or it may take a large number of iterations.
 Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
 
-In Section~\ref{sec:2:intro}, we claimed that our method is general and is able to compute the contact space for complex non-convex and non-manifold models. However, this claim is based on the implicit assumption that a `correct' collision detection routine is available for input geometric data.
+\subsubsection{Failure in Extreme Cases}
+In Section~\ref{sec:2:intro}, we claimed that our method is general and is able to compute the contact space for complex non-convex and non-manifold models. However, this claim is based on the implicit assumption that a `correct' collision detection routine is available for input geometric data; the `correctness' means that the collision result provided by the collision checking routine can correctly reflect the objects' collision status in physical world. Whether the above assumption holds will determine the correctness of the contact space computed by our learning framework. For example, if objects are represented as meshes, the assumption generally holds even if input meshes are non-convex, non-manifold, or not-closed, so our method usually can return a correct approximate contact space. However, the assumption may not hold for meshes in several extreme cases. First, if two objects are so different in scale that one object $A$ can be completely contained inside the other object $B$, the mesh-mesh collision checking will always report collision-free for configurations in which $A$ locates inside $B$, while in physical world $A$ and $B$ should be in-collision. Thus, our learning framework will not provide a correct contact space in this case. Second, if the mesh representation of object $B$ has a hole larger than the size of object $A$, the collision checking will also give incorrect results and our learning framework will fail to compute a reasonable contact space. There are several possible solutions to this limitation, including 1) designing better collision checking routines for these extreme cases; and 2) using the solid geometry instead of meshes to represent objects.
+
+\subsubsection{SVM Implementation}
+When describing the learning framework in Section~\ref{sec:2:offline:svm}, we use the hard-margin SVM (Equation~\ref{eq:2:svm1}) to introduce the key-points in the algorithm, since all in-collision samples and collision-free samples are separable. However, in implementation we use the soft-margin SVM defined as follows:
+\begin{align}
+\label{eq:2:svmsoft}
+& \underset{\mathbf w, b, \xi}{\text{min}} & & \frac{1}{2}\|\mathbf w\|^2 + C \sum_{i=1}^k \xi_i & &  \\
+& \text{subject to} & & c_i (\mathbf w \cdot \phi(\mathbf q_i) + b)
+\geq 1 - \xi_i, & & \xi_i \geq 0 & & 1 \leq i \leq k. \notag
+\end{align}
+In soft-margin SVM, slack variables $\xi_i$ measure the degree of misclassification of the data; the objective function is increased by a term which uses weight variable $C$ to penalize non-zero $\xi_i$. The optimization becomes a trade-off between a large margin and a small error penalty. 
+
+In practice, a soft-margin SVM behaves better than a hard-margin SVM, even when data is separable as in our case. The reason is that for a hard-margin SVM, a single outlier (e.g., a sample extremely close to the actual contact space) can determine the boundary, which makes the classifier overly sensitive to the data. For contact space learning, a hard-margin SVM will provide a uneven contact space with jagged edges, while the soft-margin SVM can provide a smooth contact space. 
+
+However, the soft-margin SVM requires an appropriate $C$ as the input, which is not an easy task. A suitable value of $C$ is related with the set of samples used to learn a contact space; it is also related with the number of samples used. A too small $C$ will result in a large error in the resulting contact space, while a too large $C$ will result in a non-smooth contact space or a contact space with the incorrect topology. Theoretically, cross-validation provides a systematic manner for choosing $C$, but it is computationally expensive. In our experiment, we simply repeate the learning algorithm several times and choose the $C$ leading to the best result.
+
+\subsubsection{Learning on Non-Manifold Structure}
+When learning a contact space in $\SEcubic$, we simply convert every configuration into a vector in Eculidean space: for the rotation component of each configuration, we either convert it into a $3$-dimensional vector for Euler angles or into a $4$-dimensional vector for quaternions. Given the vector representation of each configuration, we then perform the learning algorithm directly in Euclidean space. However, $\SEcubic$ in fact is a Lie group and the Eculidean space approximation is only valid locally around each configuration. Our current method does not consider additional constraints and structures from the underlying Lie group and thus may not provide good results for contact spaces with significant rotation components. One possible solution to fix this limitation is using learning algorithms on Lie group~\cite{Tuzel:2008:LLG}.
 
 \subsection{Limitations Related with Approximate Penetration-depth Computation}
 
-Finally, the solution to the penetration depth problem (Section 3.1) is often not unique or differentiable. Since we compute
+\subsubsection{Penetration-Depth Formulation}
+
+First, the solution to the penetration depth problem is often not unique or differentiable. Since we compute
 a bounded-error approximation of PD, there could be multiple solutions that satisfy those error bounds.
-This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD  computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
+This discontinuity in PD formulation and computation can cause instability in collision response for haptic rendering. In complex rigid-body simulations with multiple objects, global PD computation can improve the accuracy of the simulation, but cannot guarantee that it is totally collision-free.
 
-TODO: (two pages).
+Second, the penetration depth definition used in our method is a pure geometric one. In particular, the penetration-depth is completely determined given two objects and their configurations, and is not related with objects' velocity and acceleration. As a result, the penetration depth value computed by our method does not have physical meaning, and may not be accurate enough for applications like physically-based simulation.
 
-0. Theoritically, it can change any types of objects, once collision checking routine is supported. open/close mesh and so on. However, in pratice, it still have several limitations. 
+\subsubsection{$\knn$ Metric}
+The result of 
 
-1. hard-margin SVM. In practice, using soft-margin SVM using large C. large C, close to hard-margin, but surface is noisy. small C, may have larger error, smooth mesh. But will result in large error in PD. Need tune C to find the best C.
+Section~\ref{sec:2:overview:pdformulation}
 
 2. metric: given two configuration q1, and q2, compute the relative configuration. q then find the closest qc, but qc * q is closest to q2? if give rotation large weight-->find the rotation closest to query, but the resulting PD is large. If given rotation small weight --> rotation far from query may have small PD.   not trivial. THe PD metric we used: not scale: $I = mr^2 / V = r^2$.
+
+
+\subsubsection{Noisy PD Values}
+
+
+
+
+
+
+
 
 3. noisy a) When configuration space average error is small, the PD error usually is small. but error is not distributed uniformly. and PD error is much larger than configuration space error. As PD is analogous to the directive of the C-space.   b) rotation a bit, will have larger error, why? discrete sample
 
 4. to generate a smooth motion, need much more samples than the number of samples required. (show some result)
 
-$\cap_i\{\mathbf q: J(\mathbf q_i, \mathbf q_{i+1}) = 0\} \cap (\cup_i \{\mathbf q: f(\mathbf q_i) > 0\})$
-
-5. geometric algorithms, should be useful for haptics, need main change (velocity) to apply to physically-based simulation.
 
 
 
