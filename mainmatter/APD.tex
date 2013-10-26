@@ -13,7 +13,7 @@ When the number of samples increases, the approximate contact space computed by 
 Additionally, based on the approximate $\Ccont$ computed offline, we design a new method to efficiently approximate the penetration depth (PD) between two rigid objects. The penetration depth is the minimum amount of motion required to separate two intersecting objects. Our algorithm performs a nearest-neighbor query between a given query configuration and the precomputed $\Ccont$ approximation. Compared to prior techniques, our approach is more general and more reliable. Moreover, the runtime query only has a small overhead (a few milliseconds) and thus can be used for interactive applications. In practice, we are able to compute approximate PD with relative error less than 2-3\% by using a few thousand samples during the offline $\Ccont$ computation. We also use our PD algorithm to compute collision response between non-convex models in Box2D and Bullet physics engines. We observe more than an order of magnitude improvement in runtime performance over that of prior global PD algorithms.
 
 \subsection{Organization}
-The rest of this chapter is organized as follows. We survey related work on configuration space computation in Section~\ref{sec:2:related}. We introduce the notation and give an overview of our algorithm in Section~\ref{sec:2:overview}. The approach for approximating the configuration space using learning techniques is described in Section~\ref{sec:2:learning}. The approximate configuration space is then used for approximate PD computation, as discussed in Section~\ref{sec:2:approxPD}. We analyze the accuracy and convergence of our approximate PD algorithm in Section~\ref{sec:2:analysis}. The implementation details and experimental results are provided in Section~\ref{sec:2:result}.
+The rest of this chapter is organized as follows. We survey related work on configuration space computation in Section~\ref{sec:2:related}. We introduce the notation and give an overview of our algorithm in Section~\ref{sec:2:overview}. The approach for approximating the configuration space using learning techniques is described in Section~\ref{sec:2:learning}. The approximate configuration space is then used for approximate PD computation, as discussed in Section~\ref{sec:2:approxPD}. We analyze the accuracy and convergence of our approximate PD algorithm in Section~\ref{sec:2:analysis}. The implementation details and experimental results are provided in Section~\ref{sec:2:result}. We give a detailed discussion about the limitation of our method in Section~\ref{sec:2:limitations}.
 
 \section{Related Work}
 \label{sec:2:related}
@@ -48,10 +48,10 @@ exact contact space and then searching the contact space for the
 closest point to a given query~\cite{Zhang:2007:GPD}. However,
 due to high time and storage complexity, most
 generalized PD algorithms use optimization-based
-techniques~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP} and compute a locally
+techniques~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP,Tang:IGP:2013} and compute a locally
 optimal solution based on local approximation of the contact space.
 
-Machine learning techniques have been used for collision detection~\cite{Doshi:2007:ISRR,Pan:2011:ISRR}. However, these techniques cannot be used for PD computation directly. One reason is that in pratice, checking for collisions is much easier than computing the PD between overlapping objects.
+Machine learning techniques have been used for collision detection~\cite{Doshi:2007:ISRR,Pan:2011:ISRR}. However, these techniques cannot be used for PD computation directly. One reason is that in practice, checking for collisions is much easier than computing the PD between overlapping objects.
 
 \section{Background and Overview}
 \label{sec:2:overview}
@@ -78,8 +78,8 @@ minimal value is denoted as $\qc = \argmin_{\q
 \in \Ccont} \dist(\qa, \q)$.
 
 In this chapter, we focus on the translational and rotational motion. Different types of motion require different $\dist(\cdot,\cdot)$ metrics.
-For translational PD ($\PDt$), the commonly used $\dist(\cdot, \cdot)$ is the standard Euclidean distance metric between dim-3 vectors corresponding to the configurations. Many distance metrics have been proposed for generalized PD ($\PDg$) computation, including weighted Euclidean
-distance~\cite{Wang:CBO:2012}, object norm~\cite{Je:2012:PRP}, and displacement distance metric~\cite{Zhang:2007:AFP}. We use the displacement distance metric in our algorithm, which is defined as:
+For translational PD ($\PDt$), the commonly used $\dist(\cdot, \cdot)$ is the standard Euclidean distance metric between vectors corresponding to the configurations. Many distance metrics have been proposed for generalized PD ($\PDg$) computation, including weighted Euclidean
+distance~\cite{Wang:CBO:2012}, object norm~\cite{Je:2012:PRP,Tang:IGP:2013}, and displacement distance metric~\cite{Zhang:2007:AFP}. We use the displacement distance metric in our algorithm, which is defined as:
 \begin{align}
 \label{eq:PDgmetric}
 \dist(\mathbf q_i, \mathbf q_j) = \mu_1 q_1^2 + \mu_2 q_2^2 + \mu_3 q_3^2 + q_4^2 + q_5^2 + q_6^2,
@@ -119,7 +119,7 @@ onto $\LCS$. We denote this projection result as $\qc$.
 Finally, the distance between $\qa$ and $\qc$ is computed using an appropriate distance metric $\dist(\cdot, \cdot)$ and the result is an approximation to the exact PD value.
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/2/pipeline.pdf}
   \caption[Offline computation pipeline for $\Ccont$ approximation and the runtime algorithm to compute the PD for a given query configuration]{This figure shows the offline computation pipeline for $\Ccont$ approximation and the runtime algorithm to compute the PD for a given query configuration. The different approximations of $\LCS$ are shown below the corresponding stages. We use green points to indicate collision-free configuration samples and red points to indicate in-collision samples.}
@@ -254,7 +254,7 @@ explore these new regions (Figure~\ref{fig:2:pipeline}(c)). As
 shown in Figure~\ref{fig:2:pipeline}(e), two new collision-free
 regions (marked as blue curves) are found using exploration. After
 each exploration sampling step, we compute the fraction of the new
-samples that are not correctly predicted by $\LCSi$ to dertermine whether the exploration improves $\LCSiplus$.
+samples that are not correctly predicted by $\LCSi$ to determine whether the exploration improves $\LCSiplus$.
 If this cutoff fraction is large (e.g., $0.3$), then we increase the probability for exploration; otherwise we
 decrease it.
 
@@ -272,7 +272,7 @@ decision function $f_{\LCSa} = 0$, we first choose a pair of support
 vectors that are close to each other, but have opposite labels.
 Based on the maximal margin property, the midpoint of the two
 supporting vectors lies on or near the decision function.
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.6\linewidth]{figs/2/interpolation.pdf}
   \caption[Exploitation in SVMs]{Exploitation in SVMs:
@@ -415,7 +415,7 @@ when using $\LCS$ to compute the PD for a random configuration in $\Cspace$:
 Note that we scale the objects such that the maximum dimension of the subspace $\Cobs (BV(A),BV(B))$ is equal to 1.
 The accuracies of approximate global PD and approximate contact space are closely related: a small value of $e_{\text{col}}$ implies a small value of $e_{\text{PD}}$ and vice versa.
 
-\begin{figure}[t]
+\begin{figure}[!h]
 \begin{center}
 \subfloat[$e_{\text{col}}$ for 2D spiders]{\includegraphics[clip=true, width=0.43\textwidth]{figs/2/active/spider_activelearning-crop.pdf}}
 \subfloat[$e_{\text{col}}$ for 3D cup-spoon]{\includegraphics[clip=true, width=0.43\textwidth]{figs/2/active/cupspoon_activelearning-crop.pdf}}
@@ -487,9 +487,9 @@ the expected error locally around those samples should be less than $\epsilon$.
 The precomputation or learning phase is performed for each object pair $(A, B)$
 in the environment. The exact collision check is performed using precomputed bounding volume hierarchies.
 Given two objects represented as meshes with $m$ and $n$ triangles, the expected cost of a single
-exact collision query is $T_{col} = O(\log m + \log n)$.
+exact collision query is $T_{col} = \mathcal O(\log m + \log n)$.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
 \begin{center}
 \subfloat[$\LCS_0, |S| = 88$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDg2D_StarRoom/LCS0.png}}
 \subfloat[$\LCS_5, |S| = 174$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDg2D_StarRoom/LCS5.png}}
@@ -500,7 +500,7 @@ exact collision query is $T_{col} = O(\log m + \log n)$.
 \end{center}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
 \begin{center}
 \subfloat[$\LCS_0, |S|=231$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS0.png}}
 \subfloat[$\LCS_5, |S|=869$]{\includegraphics[width=0.24\linewidth]{./figs/2/LCSPDt3D_CupSpoon/LCS5.png}}
@@ -584,7 +584,7 @@ However, convex decomposition can result in a high number of convex pieces, More
 objects and does not guarantee that two
 overlapping non-convex objects will separate, as they only compute local PD using the convex pairs.
 
-\textbf{Contact Points and Normals:} For an inter-penetration configuration $\qa$ and its resulting contact configuration $\qc$, the contact points and contact normal can be computed in the workspace for two objects. First, for the contact configuration $\qc$, its nearest collision-free configuration can be computed using support vectors based on k-nearest-neighbor search in $\Cspace$. Next, the closest points and normals of the given two objects can be computed using the proximity query algorithm~\cite{LGLM00}. Reliable multiple contact points can be obtained using perturbation and persistent contact caching techniques~\cite{Erwin:2012:Bullet}.
+\textbf{Contact Points and Normals:} For an inter-penetration configuration $\qa$ and its resulting contact configuration $\qc$, the contact points and contact normal can be computed in the workspace for two objects. First, for the contact configuration $\qc$, its nearest collision-free configuration can be computed using support vectors based on $k$-nearest neighbor search in $\Cspace$. Next, the closest points and normals of the given two objects can be computed using the proximity query algorithm~\cite{LGLM00}. Reliable multiple contact points can be obtained using perturbation and persistent contact caching techniques~\cite{Erwin:2012:Bullet}.
 
 \textbf{Box2D} uses PD computation in the impulse-based collision response algorithm.
 We demonstrate the performance of our algorithm on
@@ -602,10 +602,10 @@ Compared to the convex decomposition based algorithm used in Bullet, our PD comp
 an order of magnitude faster. We use the standard implementation of contact normal and collision response forces computation available in Bullet.
 
 \textbf{Complex 3D Models}:
-We evaluated the performance of our algorithm on many complex models corresponding to the cup-spoon, moving teeth, bunnies, dragons, and Buddha models (Figure~\ref{fig:2:demo}) where we performed $\LCS$ computation for the 6-D $\Cspace$. We observed more than an order of magnitude performance improvement compared to prior methods.
+We evaluated the performance of our algorithm on many complex models corresponding to the cup-spoon, moving teeth, bunnies, dragons, and Buddha models (Figure~\ref{fig:2:demo}) where we performed $\LCS$ computation for the 6D $\Cspace$. We observed more than an order of magnitude performance improvement compared to prior methods.
 
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \subfloat[$\PDg$: cup-spoon]{\includegraphics[width=0.49\linewidth]{figs/2/comparison/cupspoon-crop.pdf}}  \hspace{0.05em}
   \subfloat[$\PDg$: rings (Bullet)]{\includegraphics[width=0.49\linewidth]{figs/2/comparison/ring-crop.pdf}}
@@ -616,7 +616,7 @@ We evaluated the performance of our algorithm on many complex models correspondi
 
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=4]{figs/2/comparison/PD_bunny_bunny.pdf}}
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=1]{figs/2/comparison/PD_bunny_bunny.pdf}}\\
@@ -625,7 +625,7 @@ We evaluated the performance of our algorithm on many complex models correspondi
   \caption[The performance and accuracy compared to PolyDepth on bunny-bunny benchmark]{The performance and accuracy compared to PolyDepth~\protect\cite{Je:2012:PRP} on the bunny-bunny benchmark. (a) computational time (on average, 0.10ms based on our algorithm vs. 7.15ms in PolyDepth); (b) accuracy comparison between our interactive algorithm vs. an offline algorithm based on Minkowski sum~\protect\cite{Lien:2009:ASM}; (c) accuracy comparison of PD computation between our algorithm vs. PolyDepth; (d) our global PD algorithm (blue) has lower error compared to PolyDepth, which performs local optimization. }\label{fig:2:bunnymodels}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=4]{figs/2/comparison/PD_dragon_dragon.pdf}}
   \subfloat[]{\includegraphics[width=0.49\linewidth, page=1]{figs/2/comparison/PD_dragon_dragon.pdf}}\\
@@ -642,11 +642,14 @@ compute local PD. Other techniques use distance fields and can be accelerated us
 deformable models. On the other hand, our global PD algorithm involves preprocessing and is mainly designed for rigid objects.
 The performance of our runtime query (e.g., about $0.1\sim2$ milliseconds) is comparable to or faster than these local PD computation algorithms. The main benefit of our approach over local PD methods is the computation of global
 translational and rotational PD, which provides a more reliable measure of separating two overlapping objects.
-Other algorithms reduce PD computation to constrained optimization~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP}.
+Other algorithms reduce PD computation to constrained optimization~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP,Tang:IGP:2013}.
 In these techniques, a sequence of configuration samples on the contact space are iteratively
 computed until a local minimum configuration is found. The
 performance of these algorithms heavily relies on the initial guess of the configuration, and it is hard to provide
-error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{fig:2:dragonmodels}). The approximate PD computed by our global algorithm can be used as an initial guess for these optimization-based techniques and thereby improve their accuracy.
+error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{fig:2:dragonmodels}). 
+However, compared to our method, the optimization-based algorithms have several advantages. First, they require no pre-computation and can be applied to environments with many different obstacles. Our method's dependence on pre-computation heavily limits its application areas.
+Moreover, for general PD involving rotations, optimization-based algorithms such as~\cite{Tang:IGP:2013} may provide better results than our method.This is due to our method's essential limitations related with configuration space metric design and the use of sampling-based approaches (more details in Section~\ref{sec:2:limitations}).
+Our approximate PD can work as a good complement to the optimization-based local PD approaches. The approximate PD computed by our global algorithm can be used as an initial guess for these optimization-based techniques and thereby improve their accuracy, while also keeping the high efficiency of our method.
 
 
 In order to evaluate the error in our approximate PD computation algorithm, we compute very accurate PD between two objects. For translational PD, the exact PD can be obtained by computing the Minkowski sum between two objects. 
@@ -656,7 +659,8 @@ In practice, our approach is more than an order of magnitude faster than other a
 
 
 \section{Limitations}
-Our approach is the first attempt at using machine learning techniques to improve the peformance and quality of penetration depth computation. Before this method can be useful for real-world applications, some important limitations need to be solved in the future. In our discussion, we divide these limitations into two categories: limitations related with approximate configuration space computation, and limitations related with approximate penetration depth computation.
+\label{sec:2:limitations}
+Our approach is the first attempt at using machine learning techniques to improve the performance and quality of penetration depth computation. In order to make this method useful for real-world applications, some important limitations need to be solved in the future. In our discussion, we divide these limitations into two categories: limitations related with approximate configuration space computation, and limitations related with approximate penetration depth computation.
 
 \subsection{Limitations Related with Approximate Configuration Space Computation}
 The first limitation related with approximate configuration space computation is that the precomputation phase must be performed for each pair of moving objects in the simulation. Thus, in the worst case, its complexity grows as a quadratic function of the number of objects in the simulation. In addition, the accuracy and running time of our learning phase is a function of the combinatorial complexity of the contact
@@ -665,7 +669,7 @@ isolated components of contact space, or it may take a large number of iteration
 Moreover, the overall approach is probabilistic, and all of our error bounds are derived in terms of expected error.
 
 \subsubsection{Failure in Extreme Cases}
-In Section~\ref{sec:2:intro}, we claimed that our method is general and is able to compute the contact space for complex non-convex and non-manifold models. However, this claim is based on the implicit assumption that a `correct' collision detection routine is available for input geometric data; the `correctness' means that the collision result provided by the collision checking routine can correctly reflect the objects' collision status in physical world. Whether the above assumption holds will determine the correctness of the contact space computed by our learning framework. For example, if objects are represented as meshes, the assumption generally holds even if input meshes are non-convex, non-manifold, or not-closed. Thus, our method usually can return a correct approximate contact space. However, the assumption may not hold for meshes in several extreme cases. First, if two objects are so different in scale that one object $A$ can be completely contained inside the other object $B$, the mesh-mesh collision checking will always report collision-free for configurations in which $A$ locates inside $B$, while in physical world $A$ and $B$ should be in-collision. Thus, our learning framework will not provide a correct contact space in this case. Second, if the mesh representation of object $B$ has a hole larger than the size of object $A$, the collision checking will also give incorrect results and our learning framework will fail to compute a reasonable contact space. There are several possible solutions to this limitation, including 1) designing better collision checking routines for these extreme cases; and 2) using the solid geometry instead of meshes to represent objects.
+In Section~\ref{sec:2:intro}, we claimed that our method is general and is able to compute the contact space for complex non-convex and non-manifold models. However, this claim is based on the implicit assumption that a `correct' collision detection routine is available for input geometric data; the `correctness' means that the collision result provided by the collision checking routine can correctly reflect objects' collision status in physical world. Whether this assumption holds will determine the correctness of the contact space computed by our learning framework. For example, if objects are represented as meshes, the assumption generally holds even if input meshes are non-convex, non-manifold, or not-closed. Thus, our method usually can return a correct approximate contact space. However, the assumption may not hold for meshes in several extreme cases. First, if two objects are so different in scale that one object $A$ can be completely contained inside the other object $B$, the mesh-mesh collision checking will always report collision-free for configurations in which $A$ locates inside $B$, while in physical world $A$ and $B$ should be in-collision. Thus, our learning framework will not provide a correct contact space in this case. Second, if the mesh representation of object $B$ has a hole larger than the size of object $A$, the collision checking will also give incorrect results and our learning framework will fail to compute a reasonable contact space. There are several possible solutions to this limitation, including 1) designing better collision checking routines for these extreme cases; and 2) using the solid geometry instead of meshes to represent objects.
 
 \subsubsection{SVM Implementation}
 When describing the learning framework in Section~\ref{sec:2:offline:svm}, we use the hard-margin SVM (Equation~\ref{eq:2:svm1}) to introduce the main idea of our algorithm, since all in-collision samples and collision-free samples are separable. However, in implementation we use the soft-margin SVM defined as follows:
@@ -679,10 +683,14 @@ In soft-margin SVM, slack variables $\xi_i$ measure the degree of misclassificat
 
 In practice, a soft-margin SVM behaves better than a hard-margin SVM, even when data is separable as in our case. The reason is that for a hard-margin SVM, a single outlier (e.g., a sample extremely close to the actual contact space) can determine the boundary, which makes the classifier overly sensitive to the data. For contact space learning, a hard-margin SVM will generate an uneven contact space with jagged edges, while the soft-margin SVM can provide a smooth contact space. 
 
-However, the soft-margin SVM needs to select an appropriate penalty weight $C$, which is not an easy task. A suitable value of $C$ is related with the set of samples used to learn a contact space; it is also related with the number of samples used. A too small $C$ will result in a large error in the approximate contact space, while a too large $C$ will result in a non-smooth contact space or a contact space with the incorrect topology. Theoretically, cross-validation provides a systematic manner for choosing $C$, but it is computationally expensive. In our experiment, we simply repeat the learning algorithm several times and select the $C$ giving the best result.
+However, the soft-margin SVM needs to select an appropriate penalty weight $C$, which is not an easy task. A suitable value of $C$ is related with the set of samples used to learn a contact space; it is also related with the number of samples used. A too small $C$ will result in a large error in the approximate contact space, while a too large $C$ will result in a non-smooth contact space or a contact space with incorrect topology. Theoretically, cross-validation provides a systematic manner for choosing $C$, but it is computationally expensive. In our experiment, we simply repeat the learning algorithm several times and select the $C$ giving the best result.
 
-\subsubsection{Learning on Non-Manifold Structure}
-When learning a contact space in $\SEcubic$, we simply convert every configuration into a vector in Eculidean space: for the rotation component of each configuration, we either convert it into a $3$-dimensional vector for Euler angles or into a $4$-dimensional vector for quaternions. Given the vector representation of each configuration, we then perform the learning algorithm directly in Euclidean space. However, $\SEcubic$ in fact is a Lie group and the Eculidean space approximation is only valid locally around each configuration. Our current method does not consider additional constraints and structures from the underlying Lie group and thus may not provide good results for contact spaces with significant rotation components. One possible solution to this limitation is using learning algorithms on Lie group~\cite{Tuzel:2008:LLG}.
+\subsubsection{Learning on Non-Euclidean Structure}
+When learning a contact space in $\SEcubic$, we simply convert every configuration into a vector in the Euclidean space: for the rotation component of each configuration, we either convert it into a $3$-dimensional vector for Euler angles or into a $4$-dimensional vector for the quaternion. Given the vector representation of each configuration, we then perform the learning algorithm directly in the Euclidean space. However, $\SEcubic$ in fact is a Lie group and the Euclidean space approximation is only valid locally around each configuration. Our current method does not consider additional constraints and structures from the underlying Lie group and thus may not provide good results for contact spaces with significant rotation components. One possible solution to this limitation is using learning algorithms on Lie group~\cite{Tuzel:2008:LLG}.
+
+The difficulty of non-Euclidean structure arises because our method aims at computing a global representation for the contact space, i.e., the representation is valid and accurate for any points in the contact space. An accurate global representation is challenging because it is not possible to have an Euclidean structure globally approximate a non-Euclidean structure. However, it is still possible to provide a high-accuracy Euclidean approximation to a non-Euclidean structure locally around a configuration. This approximation strategy is widely-used in optimization-based local PD algorithms such as~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP,Tang:IGP:2013}, which use different heuristics to approximate the contact-space locally around an in-contact configuration.
+
+
 
 \subsection{Limitations Related with Approximate Penetration Depth Computation}
 
@@ -692,14 +700,74 @@ First, the solution to the penetration depth problem (Section~\ref{sec:2:overvie
 
 Second, the penetration depth definition used in our method (Equation~\ref{eq:2:PDgdef}) is a pure geometric one. In particular, the penetration depth is completely determined given two objects and their configurations, and is not related with objects' velocity and acceleration. As a result, the penetration depth value computed by our method does not have physical meaning, and may not be accurate enough for applications like physically-based simulation.
 
+
+
 \subsubsection{Configuration Space Metric}
 The penetration depth formulation in Equation~\ref{eq:2:PDgdef} requires a suitable metric to be defined over the entire configuration space. Given any two points in the configuration space, this metric should correctly measure the distance or difference between them.  
-For $\PDt$, we can simply use Euclidean metric since the underlying configuration space is a Euclidean space. 
+For $\PDt$, we can simply use the Euclidean metric since the underlying configuration space is a Euclidean space. 
 For $\PDg$, the configuration space is non-Euclidean and hence the metric selection is much more challenging. In fact, for a specific application, how to define a good metric in $\SEcubic$ is the main challenge when applying our learning-based framework. 
 
-We currently use the metric defined in Equation~\ref{eq:PDgmetric}, which uses weights $\mu_1$, $\mu_2$ and $\mu_3$ to balance the relative weight between the rotational component and the translational component. This metric has several problems. First, if we set weights $\mu_i$ as suggested in Equation~\ref{eq:PDgmetricMu}, then this metric only involves the geometric information of the moving object $A$ and is not related with the geometric information of the fixed object $B$. As a result, this metric cannot be extended to the cases where both objects are moving. Second, we can also set weights $\mu_i$ arbitrarily instead of following Equation~\ref{eq:PDgmetricMu}. If $\mu_i$ is larger, we assign a larger penalty to configurations' difference in the rotational component. As a result, given an in-collision query $\mathbf q_0$, the in-contact configuration $\mathbf q_c$ computed by the PD algorithm will have a smaller difference with $\mathbf q_0$ in the rotational component. In theory, when $\mu_i \rightarrow \infty$, we can use $\PDg$ to compute $\PDt$. However, in practice, larger $\mu_i$ will lead to discontinuity in PD values. This is because in Section~\ref{sec:2:approxPD:projection}, we project a query configuration $\mathbf q_0$ onto the contact space using the nearest-neighbor algorithm. If $\mu_i$ is large, the nearest-neighbor result will be highly sensitive to the query's rotational component. As a result, a slight rotation of the moving object $A$ will result in large change in the PD value. If $\mu_i$ is smaller, $\PDg$ cannot be used to approximate $\PDt$ because the in-contact configuration computed by the PD algorithm will have different rotational component with the query configuration.
+
+We currently use the metric defined in Equation~\ref{eq:PDgmetric}, which uses weights $\mu_1$, $\mu_2$ and $\mu_3$ to balance the relative weight between the rotational component and the translational component. This metric has several problems. 
+
+First, this metric only involves the geometric information of the moving object $A$ and is not related with the geometric information of the fixed object $B$. As a result, this metric cannot be extended to the cases where both objects are moving. 
+
+The second problem about this metric is related with our approach's use of sampling-based techniques. During the off-line learning phase, we only perform a limited number of samples in the configuration space; these samples determines the approximate configuration space. During run-time, a given in-collision query $\mathbf q_0$ is projected onto the set of these discrete samples via the nearest-neighbor algorithm, to obtain the corresponding in-contact configuration $\mathbf q_c$. If $\mu_i$ is large, we assign a large penalty to configurations' difference in the rotational component, and thus $\mathbf q_0$ and $\mathbf q_c$ will have a small difference in the rotational component. Theoretically, if $\mu_i \rightarrow \infty$, we can use $\PDg$ to compute $\PDt$. However, this is not feasible in practice, due to our use of sampling-based techniques. Among all the pre-computed samples in the configuration space, there may be no samples with the same rotational component as the query configuration $\mathbf q_0$, and thus our sampling-based framework can only provide an in-contact configuration whose rotational component is close to $\mathbf q_0$. 
+
+The use of sampling-based techniques also results in the discontinuity of PD values. Suppose the moving object is collision-free in the beginning; next it contacts the obstacles, and finally collides with obstacles. Intuitively, the PD value should be zero when contact occurs and then increase continuously. However, since there are only limited number of configuration samples, usually we cannot find a sample exactly the same as the in-contact query. As a result, the approximate PD for a given query will suddenly ``jump'' from zero toward non-zero. Such jump may not be acceptable in many applications.
+
+The selection of $\mu_i$ will greatly influence final PD values. Large $\mu_i$ will cause vibrations of PD values, when the moving object is rotating. This is because metric parameters $\mu_i$ are the metric function's derivatives with respect to the rotational component, and thus large $\mu_i$ will make the nearest-neighbor algorithm highly sensitive to the change in the query's rotational component. As a result, a slight rotation of the moving object $A$ will result in large change in the PD value. If weights $\mu_i$ are too small, there may be vibrations in PD values when the moving object is translating. Moreover, small $\mu_i$ may result in a large rotation difference between the query configuration and the in-contact configuration computed by the PD algorithm.
+
+\begin{figure}[!h]
+\centering
+\subfloat[Rotation movement]{\includegraphics[width=0.48\linewidth]{figs/2/rotation_error.pdf}}
+\subfloat[Translational movement]{\includegraphics[width=0.48\linewidth]{figs/2/translation_error.pdf}}
+\caption[Toy benchmarks for illustrating how the configuration space metric influences the result of our PD algorithm]{Toy benchmarks for illustrating how the configuration space metric influences the result of our PD algorithm. The large sphere is the $\Cobs$. We use small spheres to denote configuration samples in the configuration space: the sphere center is the translational component and the arrow's direction indicates the rotational component. We use eight configurations to approximate the contact space. The red sphere is the query configuration. In (a), the query rotates counter-clockwise. In (b), the query performs translation motion.}\label{fig:2:toybenchmark}
+\end{figure}
 
 
+
+To better illustrate the above limitation related with configuration space metrics and sampling-based techniques, we now use two toy problems (Figures~\ref{fig:2:toybenchmark}(a) and (b)) to show the behavior of our PD algorithm when different metric settings are used. In these toy problems, we use eight configuration samples to approximate the contact space. The translational components of these configurations are uniformly distributed on a circle with radius $1$; these configurations have rotation angles of $\frac{k \pi}{4}$, $k=1,...,8$.
+
+\begin{figure}[!h]
+\centering
+  \subfloat[$\mu_i = 0$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w00000.pdf}}
+  \subfloat[$\mu_i = 0.001$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w0001.pdf}} 
+  \subfloat[$\mu_i = 0.01$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w001.pdf}} \\
+  \subfloat[$\mu_i = 0.1$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w01.pdf}}
+  \subfloat[$\mu_i = 1$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w1.pdf}}
+  \subfloat[$\mu_i = 10$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w10.pdf}} \\
+  \subfloat[$\mu_i = 100$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w100.pdf}}
+  \subfloat[$\mu_i = 1,000$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w1000.pdf}}
+  \subfloat[$\mu_i = 10,000$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/rotation_error_w10000.pdf}}
+\caption[Configuration space metric's influence on the result of our PD algorithm: rotational benchmark]{
+The result of our PD algorithm on the rotational benchmark shown in Figure~\ref{fig:2:toybenchmark}(a). We plot the PD values for all query configurations during the rotation, with different $\mu_i$ settings for the configuration space metric.
+}\label{fig:2:rotation_error}
+\end{figure}
+
+
+\begin{figure}[!h]
+\centering
+  \subfloat[$\mu_i = 0$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w00000.pdf}}
+  \subfloat[$\mu_i = 0.001$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w0001.pdf}} 
+  \subfloat[$\mu_i = 0.01$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w001.pdf}} \\
+  \subfloat[$\mu_i = 0.1$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w01.pdf}}
+  \subfloat[$\mu_i = 1$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w1.pdf}}
+  \subfloat[$\mu_i = 10$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w10.pdf}} \\
+  \subfloat[$\mu_i = 100$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w100.pdf}}
+  \subfloat[$\mu_i = 1,000$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w1000.pdf}}
+  \subfloat[$\mu_i = 10,000$]{\includegraphics[width=0.33\linewidth, trim=33mm 80mm 40mm 85mm, clip]{figs/2/translation_error_w10000.pdf}}
+\caption[Configuration space metric's influence on the result of our PD algorithm: translational benchmark]{The result of our PD algorithm on the translational benchmark shown in Figure~\ref{fig:2:toybenchmark}(b). We plot the PD values for all query configurations during the translation, with different $\mu_i$ settings for the configuration space metric.}\label{fig:2:translation_error}
+\end{figure}
+
+
+In the first benchmark (Figure~\ref{fig:2:toybenchmark}(a)), the moving object only performs counter-clockwise rotation. The query's rotation angle is $0$ in the beginning and then increases to $2\pi$. If large weights are assigned to the configuration space metric (i.e., $\mu_i$ are large in Equation~\ref{eq:PDgmetricMu}), the query's closest neighbor among the eight contact-space samples would be $\mathbf q_1$, since its rotation angle is also $0$. When the query's rotation angle increases from $0$ to $\pi/4$, the corresponding PD value will first increase and then decrease. This is because the PD value is dominated by the difference in rotation angles: when the rotation angle is close to $0$ or $\pi/4$, this query is either close to $\mathbf q_1$ or to $\mathbf q_2$, and thus the corresponding PD value is small; when the rotation angle is near $\pi/8$, this query is far from both $\mathbf q_1$ and $\mathbf q_2$, and thus the corresponding PD value is large. This phenomenon is shown in Figure~\ref{fig:2:rotation_error}(f)-(i). From these results for large $\mu_i$, we can also observe significant vibrations in PD values when rotation angle changes. The magnitude of such vibrations decreases when parameters $\mu_i$ become smaller (Figures~\ref{fig:2:rotation_error}(a)-(e)). In Figure~\ref{fig:2:rotation_error}(a), PD values are constant when $\mu_i = 0$, since rotational weights in the PD metric are zero.
+
+In the second benchmark (Figure~\ref{fig:2:toybenchmark}(b)), the moving object only performs translation. In the beginning, the object is in-contact with obstacles. Then it moves deep inside obstacles along the $y$-axis. Finally, it will be in-contact again with obstacles. The query's rotation angle is fixed at $\pi/8$. The results of our PD algorithm are shown in Figure~\ref{fig:2:translation_error}. Apparently, for all $\mu_i$ settings about the metric, PD values are non-zero for in-contact configurations in the beginning and end of the movement. As we discussed above, this is because
+we only use a limited number of (i.e., eight) in-contact configurations to approximate the contact space, and none of them have the same rotation angle as the query. However, if $\mu_i$ is small (Figures~\ref{fig:2:translation_error}(a)-(d)), PD values indeed first increase and then decrease, which is consistent with our intuition; such phenomenon disappears for large $\mu_i$ (Figures~\ref{fig:2:translation_error}(e)-(i)). The reason is that for small $\mu_i$, the translational component dominates the PD value. Since the query's translational distance to the eight in-contact samples first decreases and then increases, the PD value will have the same property. For large $\mu_i$, the rotational component dominates the PD value, which does not change because the query's rotation angle is fixed. As a result, the query's PD value only change slightly during the motion, and no longer has the property of first increasing and then decreasing.  Moreover, we observe that for the translational motion, PD values will not have the strong vibration as in the rotational motion, though for smaller $\mu_i$, PD values are less smooth.
+
+Based on above experiments on two toy benchmarks, we provide a detailed analysis about our PD algorithm's limitation related with configuration space metrics and sampling-based techniques. Our analysis is based on the toy benchmarks with a few samples in the configuration space. However, the phenomenon we observed about our PD algorithm will also explain our method's behavior when more samples are provided, because for a $6$-dimensional configuration space, even one million samples are still sparse (i.e., $10$ samples for each dimension). Thus, these limitations observed from the toy benchmarks are essential to our learning-based PD framework.
+To solve these limitations, the best approach is to combine our method with the optimization-based general PD algorithm~\cite{Tang:IGP:2013}. Given an in-collision query configuration, our method can efficiently compute a candidate for the in-contact configuration $\mathbf q_c$. The optimization-based algorithm can then use $\mathbf q_c$ as an initialization of the optimization and eventually compute a high accuracy in-contact configuration and the corresponding PD values. Optimization-based algorithm does not use discrete samples to approximate the contact space, and therefore can avoid the ``jump'' and vibration problems of our method.
 
 
 \section{Conclusions}
@@ -720,7 +788,7 @@ It would also be useful to extend the approach to articulated models that take i
 In order to handle deformable models, we aim to develop incremental techniques that can refine the contact
 space approximation for deforming objects. It would be useful to apply this approach for other PD formulations, such as penetration volume~\cite{Weller-RSS-09}, which can result in continuous response forces. We also need improved algorithms for collision response that can guarantee collision-free simulations for interactive applications.
 
-\begin{figure}
+\begin{figure}[!h]
 \centering
 \parbox{0.9\linewidth}{%
  \subfloat[]{\includegraphics[height=0.605\linewidth]{figs/2/demo/Box2D/Box2DAngryBird_2013_5_14.png}}
@@ -738,7 +806,7 @@ space approximation for deforming objects. It would be useful to apply this appr
 \end{figure}
 
 
-\begin{table}[tbp]
+\begin{table}[!h]
   \centering
   \rowcolors{1}{gray!25}{}
   \resizebox{\linewidth}{!}{%

@@ -73,7 +73,7 @@ The goal of a motion planner is to compute a collision-free continuous path betw
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\linewidth]{figs/3/oracle.pdf}
+  \includegraphics[width=0.7\linewidth]{figs/3/oracle.pdf}
   \caption[Comparison between prior sample-based planners and planners enhanced by instance-based learning]{Use of collision detection in sample-based planners: (a) exact collision checking only and (b) our approach with exact and approximate collision checking. (a) The exact collision detection routine is the oracle used by the planner to gather information about $\Cfree$ and $\Cobs$. The planner performs binary collision queries, either on point configurations or $1$-dimensional local paths, and estimates the connectivity of $\Cfree$ (shown as Approximate $\Cfree$). Some planners utilize the in-collision results to bias sample generation by using different heuristics. (b) Our method also performs collision queries. However, we store all in-collision results (as Approximate $\Cobs$) and collision-free results (as Approximate $\Cfree$). Before performing an exact collision query, our algorithm performs a $\knn$ query on the given configuration or local path for computing a collision probability for each query. The collision probability can be used as a cost function to compute an efficient strategy for performing exact collision queries during motion planning. We use novel LSH-based algorithms to perform $\knn$ queries efficiently and to speed up the overall planner.}
   \label{fig:3:oracle}
 \end{figure}
@@ -123,7 +123,7 @@ A description of our learning-based collision framework is given in Algorithm~\r
 \label{sec:3:overview:lsh}
 A key challenge for our learning framework is its computational efficiency. As we generate hypotheses directly from training instances, the complexity of $\knn$ computation grows with the size of historical data. If we use exact $\knn$ computation as the underlying learning method, its complexity is a linear function of the size of the dataset, especially for high-dimensional spaces. To improve the efficiency of our instance-based learning algorithm, we use approximate $\knn$ algorithms.
 
-Given a dataset $\mathcal D = \{\mathbf x_1, \mathbf x_2, ... \mathbf x_N\}$ of $N$ points in $\mathcal R^d$, we consider two types of retrieval queries. One retrieves the points from $\mathcal D$ closest to a given point query: this is the well-known $\knn$ query, which we call the \emph{point-point $\knn$} query. The second query tries to find the points from $\mathcal D$ that are closest to a given line in $\mathcal R^d$ whose direction is $\mathbf v$ and which passes through a point $\mathbf a$, where $\mathbf v, \mathbf a \in \mathcal R^d$. We call this second query the \emph{line-point $\knn$} query. The two types of $\knn$ queries are illustrated in Figure~\ref{fig:3:KNN}.
+Given a dataset $\mathcal D = \{\mathbf x_1, \mathbf x_2, ... \mathbf x_N\}$ of $N$ points in $\Rd$, we consider two types of retrieval queries. One retrieves the points from $\mathcal D$ closest to a given point query: this is the well-known $\knn$ query, which we call the \emph{point-point $\knn$} query. The second query tries to find the points from $\mathcal D$ that are closest to a given line in $\Rd$ whose direction is $\mathbf v$ and which passes through a point $\mathbf a$, where $\mathbf v, \mathbf a \in \Rd$. We call this second query the \emph{line-point $\knn$} query. The two types of $\knn$ queries are illustrated in Figure~\ref{fig:3:KNN}.
 
 
 In order to develop an efficient instance-based learning framework, we use locality-sensitive hashing (LSH) as an approximate method for $\knn$ queries, which is mainly designed for point-point queries~\cite{Andoni:2008:NHA}. However, it can be extended to line queries~\cite{Andoni:2009:ALN} and hyper-plane queries~\cite{Jain:nips:2010}. \cite{Basri:2011} further extend it to perform point/subspace queries.
@@ -164,7 +164,7 @@ Later in Section~\ref{sec:3:linelsh}, we discuss challenges in designing appropr
 
 \begin{figure}[t]
   \begin{center}
-  \includegraphics[width=\linewidth]{figs/3/KNN.pdf}
+  \includegraphics[width=0.7\linewidth]{figs/3/KNN.pdf}
   \caption[Two types of $\knn$ queries used in instance-based learning]{Two types of $\knn$ queries used in our method: (a) point-point $\knn$ and (b) line-point $\knn$. $Q$ is the query item, and the results of different queries are shown as blue points in each figure. We present novel LSH-based algorithms for fast computation of these queries. (c) The line-point $\knn$ query is used to compute prior instances that can influence the collision status of a local path which connects $\mathbf x_1$ and $\mathbf x_2$ in $\Cspace$. The query line is the line segment between $\mathbf x_1$ and $\mathbf x_2$. The white points are prior collision-free samples in the dataset, and the black points are prior in-collision samples.   \label{fig:3:KNN}}
 \end{center}
 \end{figure}
@@ -182,13 +182,13 @@ The simplest algorithm for line-point $\knn$ query is based on discretizing the 
 Our approach to using LSH to perform line-point $\knn$ query is to embed the line query and the point dataset into a higher-dimensional space, and then perform point-point $\knn$ queries in that embedded space. First, we present a technique to perform line-point embedding. Next, we design hash functions for the embedding and prove that these hash functions satisfy the locality-sensitive property for the original data (i.e., $\mathcal D$). Finally, we derive the error bound and time bound for the approximate line-point $\knn$ query, which is similar to that given in Theorem~\ref{thm:3:pplsh}.
 
 \subsection{Line-point Distance}
-A line $l$ in $\mathcal R^d$ is described as $l = \{\mathbf a + s \cdot \mathbf v\}$, where $\mathbf a$ is a point in $\mathcal R^d$ and $\mathbf v$ is a unit vector in $\mathbf R^d$.
-The Euclidean distance of a point $\mathbf x \in \mathcal R^d$ to the line $l$ is given as:
+A line $l$ in $\Rd$ is described as $l = \{\mathbf a + s \cdot \mathbf v\}$, where $\mathbf a$ is a point in $\Rd$ and $\mathbf v$ is a unit vector in $\mathbf R^d$.
+The Euclidean distance of a point $\mathbf x \in \Rd$ to the line $l$ is given as:
 \begin{equation}
 \label{eq:3:basicdist}
   \dist^2(\mathbf x, l) = (\mathbf x - \mathbf a) \cdot (\mathbf x - \mathbf a) - ((\mathbf x - \mathbf a) \cdot \mathbf v)^2.
 \end{equation}
-Given a database $\mathcal D = \{\mathbf x_1, ..., \mathbf x_N\}$ of $N$ points in $\mathcal R^d$, the goal of line-point $\knn$ query is to retrieve the points from $\mathcal D$ that are closest to $l$. We do not directly use Equation~\ref{eq:3:basicdist} for line-point $\knn$ query, because in that form the database item (i.e., the point) and the query item (i.e., the line) are not well separated. To accelerate the line-point $\knn$ using LSH-based techniques, we transform the distance metric to a form which is more suitable for efficient $\knn$ query.
+Given a database $\mathcal D = \{\mathbf x_1, ..., \mathbf x_N\}$ of $N$ points in $\Rd$, the goal of line-point $\knn$ query is to retrieve the points from $\mathcal D$ that are closest to $l$. We do not directly use Equation~\ref{eq:3:basicdist} for line-point $\knn$ query, because in that form the database item (i.e., the point) and the query item (i.e., the line) are not well separated. To accelerate the line-point $\knn$ using LSH-based techniques, we transform the distance metric to a form which is more suitable for efficient $\knn$ query.
 
 \subsection{Line-point Embedding: Non-affine Case}
 \label{subsubsec:3:embed}
@@ -226,7 +226,7 @@ Now we consider the case of any arbitrary affine line, i.e., $\mathbf a \neq \ma
   =& \ \vectorize(\begin{pmatrix} \mathbf x \\ 1 \\ t \end{pmatrix} \begin{pmatrix} \mathbf x \\ 1 \\ t \end{pmatrix}^T) \cdot \vectorize(\mathbf B) \\
   =& \ \hat{V}^P(\mathbf x) \cdot \hat{V}^L(\mathbf v, \mathbf a), \notag
 \end{align}
-where $\hat{V}^P(\mathbf x)$ and $\hat{V}^L(\mathbf v, \mathbf a)$ are $(d+2)^2$-dimensional embeddings for a point and line in $\mathcal R^d$, respectively. Similarly to Equation~\ref{eq:3:embed}, if we choose $t(\mathbf x) = \sqrt{c - \mathbf x^2 - 1}$, where $c > \max_{\mathbf x \in \mathcal D} \|\mathbf x\|^2 + 1$ is a constant related to the entire database $\mathcal D$ (i.e., set $\|\hat{V}^P(\mathbf x)\|^2 = c^2$), then $\dist^2(\mathbf x, l)$ also linearly depends on the squared Euclidean distance between the embedded database and the query item: $\|\hat{V}^P(\mathbf x) - \hat{V}^L(\mathbf v, \mathbf a)\|^2 = c^2 + d - 2 + (\dist^2(\mathbf 0, l) + 1)^2 + 2 \dist^2(\mathbf x, l)$. As a result, we can perform an affine line-point $\knn$ query based on a point $\knn$ query in a $(d+2)^2$-dimensional database $\hat{V}^P(\mathcal D) = \{\hat{V}^P(\mathbf x_1), ..., \hat{V}^P(\mathbf x_N) \}$, where the corresponding query item is $-\hat{V}^L(\mathbf v, \mathbf a)$.
+where $\hat{V}^P(\mathbf x)$ and $\hat{V}^L(\mathbf v, \mathbf a)$ are $(d+2)^2$-dimensional embeddings for a point and line in $\Rd$, respectively. Similarly to Equation~\ref{eq:3:embed}, if we choose $t(\mathbf x) = \sqrt{c - \mathbf x^2 - 1}$, where $c > \max_{\mathbf x \in \mathcal D} \|\mathbf x\|^2 + 1$ is a constant related to the entire database $\mathcal D$ (i.e., set $\|\hat{V}^P(\mathbf x)\|^2 = c^2$), then $\dist^2(\mathbf x, l)$ also linearly depends on the squared Euclidean distance between the embedded database and the query item: $\|\hat{V}^P(\mathbf x) - \hat{V}^L(\mathbf v, \mathbf a)\|^2 = c^2 + d - 2 + (\dist^2(\mathbf 0, l) + 1)^2 + 2 \dist^2(\mathbf x, l)$. As a result, we can perform an affine line-point $\knn$ query based on a point $\knn$ query in a $(d+2)^2$-dimensional database $\hat{V}^P(\mathcal D) = \{\hat{V}^P(\mathbf x_1), ..., \hat{V}^P(\mathbf x_N) \}$, where the corresponding query item is $-\hat{V}^L(\mathbf v, \mathbf a)$.
 
 %The dimension of the embedded space (i.e., $(d+1)^2$ or $(d+2)^2$) is much higher than the original space (i.e., $d$), and will slow down the LSH computation. We present two techniques to reduce the dimension of the embedded space.
 %
@@ -296,7 +296,7 @@ and
 &\ \mathbb E_{\text{error}}[c(l) \mid \mathcal D] \notag \\
 =& \ y(l) \cdot \mathbb P[c(l) = 0 \mid \mathcal D] + (1 - y(l)) \cdot \mathbb P[c(l) = 1 \mid \mathcal D], \notag
 \end{align}
-where $\mathcal D$, as defined before, is a dataset of $N$ points in $\mathcal R^d$ and $y(\cdot)$ provides the exact collision status of $\mathbf p$ or $l$.
+where $\mathcal D$, as defined before, is a dataset of $N$ points in $\Rd$ and $y(\cdot)$ provides the exact collision status of $\mathbf p$ or $l$.
 
 A classifier is \emph{effective} at predicting the collision status of point or line queries if its prediction error converges to zero when the size
 of database $\mathcal D$ increases. In other words, an effective classifier $c(\cdot)$ should have the following property:
@@ -380,7 +380,7 @@ These two rejection rules are shown in Figure~\ref{fig:3:reject}. The rejection 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.7\linewidth]{figs/3/reject.pdf}
+  \includegraphics[width=0.45\linewidth]{figs/3/reject.pdf}
   \caption[Two rejection rules used in instance-based learning]{Two rejection rules: (a) ambiguity rejection: $Q$'s estimated collision probability is near $0.5$ or the variance for the estimate is large; (b) distance rejection: when $Q$ is far from all in-collision and collision-free database items.}
   \label{fig:3:reject}
 \end{figure}
@@ -703,7 +703,7 @@ torus & 31.52/4.3 & 23.3/3.5 (39\%) & 4.16/0.91 & 2.75/0.88 (51\%) & 3.95/1.12 &
 
 
 \subsection{Dynamic Environments}
-It is possible to extend our method to handle dynamic environments. Let the underlying obstacle reside in the workspace $W$ ($\mathcal R^2$ or $\mathcal R^3$). We divide the workspace into a set of grids. Then we define two set valued functions,
+It is possible to extend our method to handle dynamic environments. Let the underlying obstacle reside in the workspace $W$ ($\Rsqr$ or $\Rcubic$). We divide the workspace into a set of grids. Then we define two set valued functions,
 \begin{align}
 \texttt{o\_to\_grid}&: \text{obstacles} \rightarrow \text{collection of grid indices} \notag \\
 \texttt{grid\_to\_c}&: \text{grid indices} \rightarrow \text{collection of configurations}. \notag
