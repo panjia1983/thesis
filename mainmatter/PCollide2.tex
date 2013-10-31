@@ -249,7 +249,7 @@ involved when performing collision or distance queries with the
 octree structure.
 
 
-\begin{figure*}[htbp]
+\begin{figure}[!htbp]
 \centering
 \subfloat[Pipeline for collision or distance
   computation: The sensor data is first represented as a collision
@@ -274,7 +274,7 @@ octree structure.
   \label{fig:8:newpipeline}
 }
 \caption[Comparison between possible pipelines for environment representation and collision detection]{\label{fig:8:pipelines} Comparison between possible pipelines for environment representation and collision detection.}
-\end{figure*}
+\end{figure}
 
 
 \section{Efficient Collision and Distance Queries on Sensor Data}
@@ -342,7 +342,7 @@ AABB tree. Then, according to Equation~\ref{eq:8:overalltime},
 if $N < \frac{c_1 \cdot n \log n - c_2 \cdot 3 k \cdot n}{c_3 \cdot \log n}$, the amortized method will have better
 performance than the traditional methods. Here $c_1$, $c_2$ and $c_3$ are constant coefficients for $\mathcal O(n\log n)$, $\mathcal O(3k \cdot n)$, and $\mathcal O(\log n)$: $c_1$ is the cost to place a given AABB on one side of an axis-aligned plane according to its center coordinates; $c_2$ is the cost to decide whether to exchange the position of two $3k$-bit integers by comparing one of the $3k$ bits; and $c_3$ is the cost to test whether a given AABB is completely within another AABB and if not, enlarge the second AABB. For $c_3 > c_1 > c_2$, we have that the above upper bound for $N$ can be approximated by $N < \frac{c_1}{c_3} n$.
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.8\linewidth]{figs/8/morton.pdf}
 \caption[Illustration of 2-D Morton curve]{\label{fig:8:morton} Example of 2-D Morton curve. According to the first two
@@ -491,7 +491,7 @@ robot's path can be performed by checking the collisions between
 the octree and a series of samples on the path. Each collision
 query can be performed based on a recursive method similar to Algorithm~\ref{algo:collision_recurse}. 
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
 \mbox{
 \subfloat[Collision checking only performed between the planned trajectory and regions that are known to be occupied (the blue part) in the sensor data.]
 {
@@ -593,7 +593,7 @@ many obstacles. Moreover, we have observed that the collision query benefits mor
 
 Figure~\ref{fig:8:unknowncollision} shows how a motion planner can use the results provided by our algorithms to improve its performance in environment with unknown or uncertain regions. Given a task, the planner first computes a trajectory that does not collide with the region known to be occupied by obstacles. Then, using our methods, we can compute the part of unknown regions that intersect with the robot, which is marked using brown color in Figure~\ref{fig:8:unknowncollision}(b). The motion planner needs more information about these regions in order to determine whether the trajectory is indeed collision-free, which can be performed via various strategies; e.g., turning the sensor towards the marked region with the maximum entropy. Given the regions with large collision probability, robots can use active sensing to reduce the uncertainty in these regions and therefore improve execution safety by avoiding collision with objects in these unknown regions, as shown in Figure~\ref{fig:8:actualPR2}.
 
-\begin{figure*}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[height=1.8in]{figs/8/fail1.png}
   \includegraphics[height=1.8in]{figs/8/fail2.png}
@@ -603,10 +603,10 @@ Figure~\ref{fig:8:unknowncollision} shows how a motion planner can use the resul
   \includegraphics[height=1.2in]{figs/8/succ3.png}
   \includegraphics[height=1.2in]{figs/8/succ4.png}
   \caption[Comparison experiments on the PR2 robot without and with active sensing]{\label{fig:8:actualPR2} Comparison experiments on the PR2 robot without active sensing (first row) and with active sensing (second row). When using active sensing, the robot can safely avoid the cupboard not covered by the initial sensor data.}
-\end{figure*}
+\end{figure}
 
 
-\begin{table}[htbp]
+\begin{table}[!htbp]
 \centering
 \begin{tabular}{c|c c | c c}
  & $T_1$ & $T_q$ & $T_1 + 10 \cdot T_q$ & $T_1 + 10^2 \cdot T_q$ \\\hline
@@ -618,7 +618,7 @@ amortized & 0.92 & $4.52 \cdot 10^{-3}$ & 0.96 & 1.37 \\
 }
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!ht]
 \centering
 \setlength{\tabcolsep}{4pt}
 \subfloat[Objects and boxes are in the form of geometric primitives]{
@@ -639,7 +639,7 @@ our pipeline & 0 & 0 & 0.075 & 0.75 & 7.5 \\
 \end{table}
 
 
-\begin{table}[ht]
+\begin{table}[!ht]
 \centering
 \subfloat[Objects and boxes are in the form of geometric primitives]{
 \begin{tabular}{c|c c c | c}
@@ -659,7 +659,7 @@ our pipeline & 0 & 0 & 61.86 & 61.86 \\
 \end{table}
 
 
-\begin{table}[ht]
+\begin{table}[!ht]
 \centering
 \subfloat[PR2 collision]{
 \begin{tabular}{c|c c | c c}

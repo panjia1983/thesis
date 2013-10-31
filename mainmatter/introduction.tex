@@ -5,7 +5,7 @@ Europe and USA exhibit similar trends: Intelligent robots are being designed in 
 
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/1/pipeline-crop.pdf}
   \caption[Important hardware and software subsystems in a robot system]{Important hardware and software subsystems in a robot system. 1) Feed-forward system (F), including task planning, navigation strategy, motion planning and trajectory generation. 2) Control system (C), including kinematics, dynamics and control algorithms. 3) Actuator system (A), including motors, servos, transmissions, and so forth. 4) Sensor system (S), including various sensors such as camera, laser, IMU and related low level sensor data processing algorithms such as signal processing, estimation and fusion. 5) Sensor post-processing system (S$^+$), including localization, mapping, etc. The main software component of a robot system is the \emph{high level planning and navigation}, which determines the instructions sent to the actuator system, given the desired tasks to be executed. One important component of high level planning and navigation is \emph{motion planning}, which focuses on computing the trajectory from the environment description.}
@@ -42,7 +42,7 @@ The configuration space is a key concept used in classical mechanics to describe
 
 The configuration space of a robot $A$ is composed of two components: \emph{collision-free space} $\Cfree = \{\q: A(\q) \cap B = \emptyset\}$ and \emph{in-collision space} or \emph{obstacle space} $\Cobs = \{\q: A(\q) \cap B \neq \emptyset\}$, where $B$ is the geometry for obstacles in the environment and $A(\q)$ corresponds to $A$ with the configuration $\q$. $\Cobs$ is a closed set and its boundary is denoted as the \emph{contact space} $\Ccont = \partial \Cobs$, which corresponds to the set of configurations where $A$ and $B$ just touch each other without penetration. Figure~\ref{fig:1:contactspace} shows an example of the $\Cspace$ of two objects where $\Ccont$ is highlighted with an orange curve.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.6\linewidth]{figs/1/Ccont.pdf}
   \caption[The configuration space of two objects]{The configuration space of two objects. The orange curve highlights the contact space $\Ccont$ of $A$ and $B$. A point inside/on the orange curve belongs to
@@ -53,7 +53,7 @@ The configuration space of a robot $A$ is composed of two components: \emph{coll
 
 In the special case when $A$ and $B$ are both rigid objects and robot $A$ can only perform translation motion, $\Cobs$ is equal to the well-known Minkowski sum between $A$ and $B$: $\Cobs = A \oplus (-B) = \{\x = \x_A + \x_B | \x_A \in A, \x_B \in -B \}$. One example of the Minkowski sum is shown in Figure~\ref{fig:1:contactspace}. When robot $A$ can perform general motion (i.e., both translation and rotation), the geometry of $\Cobs$ is much more complicated, as shown by the 2D example in Figure~\ref{fig:1:cspaceSE2}.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.9\linewidth]{figs/1/cspaceSE2.png}
   \caption[$\Cobs$ between 2D rigid objects $A$ and $B$]{$\Cobs$ between 2D rigid objects $A$ and $B$. For each rotation angle $\theta \in [0, 2\pi)$, we can compute the Minkowski sum between $A(\theta)$ and $-B$, where $A(\theta)$ is the resulting shape after rotating $A$ about the origin with $\theta$ degrees. When stacking the Minkowski sums for all angles $\theta$, we obtain the $\Cobs$ between $A$ and $B$. This figure is modified from an online image with unknown source.}
@@ -74,7 +74,7 @@ Topology-based methods capture the connectivity of the configuration space. Most
 may consist of multiple components or small, narrow passages, it is hard to capture the full connectivity of $\Cfree$ using random sampling. There is extensive work on improving the connectivity computation by using different sampling strategies~\cite{Amato:1998:OOP,Boor:1999:ICRA,Hsu:1998:FNP,Rodriguez:2006,Zhang:2008:ICRA,Zheng:2005}. Recent work attempts to capture the topology of both $\Cfree$ and $\Cobs$~\cite{Jory:2011:IROS}. Topology-based methods can compute an approximate $\Cspace$ representation much faster than geometry-based methods. However, these methods do not work well with narrow passages and can be slow for high-DOF robots.
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \subfloat[Graph representation]{\includegraphics[width=0.49\linewidth]{figs/1/topology1.pdf}}
   \subfloat[Tree representation]{\includegraphics[width=0.49\linewidth]{figs/1/topology2.pdf}}
@@ -91,7 +91,7 @@ it is preferable for the trajectory to be optimal under some metric. For instanc
 As a result, motion planning can be formalized as a constrained optimization problem in $\Cspace$. Similar formulation can be applied to different applications, such as penetration depth computation~\cite{Zhang:2007:GPD,Zhang:2007:AFP,Zhang:2008:ICRA,Je:2012:PRP}.
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/1/planning-crop.pdf}
   \caption[Motion planning in workspaces and in configuration spaces]{Motion planning in workspaces and in configuration spaces. The left figure shows obstacles (with different colors) and a 2-linked robot in the workspace (both the initial and goal settings). The right figure shows the configuration space corresponding to the workspace in the left figure, where different colors describe the correspondence between obstacles in the workspace and obstacles in the configuration space. The blue curve is a trajectory connecting the initial and goal configurations, and is the result of motion planning algorithm. This figure is modified from~\cite{cspaceJapplet}. \label{fig:1:planning}}

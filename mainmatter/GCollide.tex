@@ -76,7 +76,7 @@ The relationship between BVH trees and BVTT is also shown in Figure~\ref{fig:5:B
 of two geometric models, the BVTT is completely determined using those BVHs and is independent of the actual configuration of
 each model. The model configurations only affect the actual traversal path of the BVTT.
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=\linewidth]{figs/5/BVTT.pdf}
   \caption[Illustrations of BVH and BVTT]{BVH and BVTT: (a) shows two BVH trees and (b) shows the BVTT tree for the collision checking between the two BVH trees.}
@@ -170,7 +170,7 @@ rays follow
 exactly the same traversal path in the hierarchy. This is achieved by sharing the traversal stack (similar to the BVTT traversal stack in Algorithm~\ref{algo:5:naive}) among the rays in the same warp-sized packet (i.e., threads that fit in one chunk on the GPU), instead of each thread using an independent stack for a single ray.
 This implies that some additional nodes in the hierarchy may be visited during ray intersection tests, even though there are no intersections between the rays and those nodes. But the resulting traversal is coherent for different rays, because each node is fetched only once per packet. In order to reduce the number of computations (i.e., unnecessary node intersection tests), all the rays in one packet should be similar to one another, i.e., have similar traversal paths with few differing branches. For ray tracing, the packet construction is simple: as shown in Figure~\ref{fig:5:raypacket}, rays passing through the same pixel on the image space make a natural packet. We extend this idea to parallel collision checking and refer to our algorithm as the \emph{multiple configuration-packet} method.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/5/raypacket.pdf}
   \caption[Ray packets for faster GPU-based ray tracing]{Ray packets for faster ray tracing. Nearby rays constitute a ray packet and this spatial coherence is
@@ -193,7 +193,7 @@ with constraints $|C_k| = \text{chunk-size}, 1\leq k \leq K$. To our knowledge, 
 for this specific problem. One possible solution is to use \emph{clustering with balancing constraints}~\cite{Banerjee:2006},
 which has the additional constraints $|C_k| \geq m, 1\leq k \leq K$, where $m \leq \frac{N}{K}$.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figs/5/collisionpacket.pdf}
 \caption[Multiple configuration packet for parallel collision detection]{Multiple configuration packets for parallel collision detection. Green points are random configuration samples in $\mathcal{C}$-space. Grey areas are $\mathcal{C}$-obstacles. Configurations adjacent in $\mathcal{C}$-space are clustered into configuration packets (red circles). Some packets are completely in free space; some packets are completely within $\mathcal{C}$-obstacles; and some packets are near boundaries of $\mathcal{C}$-obstacles. Configurations in the
@@ -214,7 +214,7 @@ step is repeated recursively, until the stack is empty. Compared to Algorithm~\r
 traversal stack in shared memory, instead of using one stack for each thread. Therefore, the size of shared memory used
 is reduced by the $\text{chunk-size}$ and results in higher parallel efficiency. The details of the traversal order decision rule are shown in Figure~\ref{fig:5:packettraverse}.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/5/packettraverse.pdf}
   \caption[Synchronous BVTT traversal for packet configurations]{Synchronous BVTT traversal for packet configurations. The four trees in the first row are the BVTT trees for configurations in the same chunk. For convenience, we represent BVTT as binary tree instead of 4-ary tree. The $1$ or $0$ at each node represents whether the BV-overlap or exact intersection test executed at that node is in-collision or collision-free. The red edges are the edges visited by the BVTT traversal algorithm and the indices on those edges
@@ -354,14 +354,14 @@ We can further improve the efficiency by using the pump operation, as shown in A
     \end{algorithmic}
 \end{algorithm}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/5/balance.pdf}
   \caption[Load balancing strategy for our parallel collision query algorithm]{Load balancing strategy for our parallel collision query algorithm. Each thread keeps its own local work queue in local memory. After processing a task, each thread is either able to run further or has an empty or full work queue and terminates. Once the number of GPU cores terminated exceeds a given threshold, the \emph{manage kernel} is called and copies the local queues back onto global work queues. If no work queue has too many or too few tasks, the \emph{task kernel} restarts. Otherwise, the \emph{balance kernel} is called to balance the tasks among all the queues. If there are not sufficient tasks in the queues, more BVTT root nodes will be 'pumped' in by the \emph{pump kernel}.}
   \label{fig:5:balance}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/5/gproximity-parallel-differentcontrol.pdf}
   \caption[Different strategies for parallel collision query using work queues]{Different strategies for parallel collision query using work queues. (a) Naive approach: repeat the single collision query algorithm. (b) Work queues are initialized with several BVTT root nodes and this process is repeated until all queries are performed. (c) is similar to (b) except that new BVTT root nodes are added to the work queues by the pump kernel, when there is not a sufficient number of tasks in the queue.}
@@ -427,7 +427,7 @@ As part of our implementation, we replace the collision detection module in gPla
 As observed in Chapter~\ref{chp:GPlanner}, motion planning algorithms spend more than 
 90\% of their time in collision queries, i.e., milestone computation and local planning.
 
-\begin{table}[htb]
+\begin{table}[!htb]
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|}\hline
 &piano & large-piano & helicopter & humanoid & PR2 \\ \hline \hline
@@ -440,7 +440,7 @@ DOF & 6 & 6 & 6 & 38 & 12 (one arm) \\ \hline
 \end{center}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
     \subfloat[piano]{\centering \includegraphics[width=0.3\linewidth]{figs/5/piano.png}}
     \subfloat[helicopter]{\centering \includegraphics[width=0.3\linewidth]{figs/5/helicopter.png}}
     \subfloat[humanoid]{\centering \includegraphics[width=0.23\linewidth]{figs/5/pick.png}}
@@ -466,7 +466,7 @@ returns a collision-free query. Thus, Algorithm~\ref{algo:5:naive} may suffer fr
 may suffer from false negative errors. We also
 compare the performances of Algorithm~\ref{algo:5:naive} and Algorithm~\ref{algo:5:configuration-packet} when the clustering algorithm described in Section~\ref{sec:5:algorithm:packet} is used and when it is not.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=\linewidth]{figs/5/pr2_result.png}
   \caption[The GPU-based motion planner can compute a collision-free path for PR2 in less than $1$ second]{Our GPU-based motion planner can compute a collision-free path for PR2 in less than $1$ second. }
@@ -474,7 +474,7 @@ compare the performances of Algorithm~\ref{algo:5:naive} and Algorithm~\ref{algo
 \end{figure}
 
 
-\begin{table}[htb]
+\begin{table}[!htb]
 \begin{center}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
@@ -491,7 +491,7 @@ humanoid & 2,392 & 2,322 & 2,379 & 2,316 & 2,068 & 1,877 & 2,073 & 1,823 & 337 &
 different sizes used for the traversal stack; C and no-C refer to using pre-clustering and not using pre-clustering, respectively; the timing of Algorithm~\ref{algo:5:balancing} includes two parts: traversal and balancing.}\label{tab:5:milestone}
 \end{table}
 
-\begin{table}[htb]
+\begin{table}[!htb]
 \begin{center}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
@@ -518,7 +518,7 @@ Second, we observe that Algorithm~\ref{algo:5:balancing} is usually the fastest 
 It can result in more than 5-10 times speedup over other methods.
 
 
-\begin{figure}[h!]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/5/nopump.pdf}
   \includegraphics[width=0.8\linewidth]{figs/5/pump.pdf}
@@ -554,7 +554,7 @@ for self-collisions. This strategy can greatly reduce the number of pairwise che
 the number of samples is reduced to $500$. The collision-free path calculated by our planner is shown in Figure~\ref{fig:5:PR2result}.
 
 
-\begin{table}[htb]
+\begin{table}[!htb]
 \begin{center}
 \begin{tabular}{|c|c|c|} \hline
                                 & milestone computation & local planning \\ \hline

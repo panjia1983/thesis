@@ -77,7 +77,7 @@ The Bi-level LSH scheme~\cite{BilevelLSH2011} is designed to obtain better perfo
 
 An overview of our algorithm is shown in Figure~\ref{fig:6:overview} and includes two levels.
 In the first level, we construct a \emph{random projection tree} (RP-tree)~\cite{yoav:nips:2007,Dasgupta:2008}, which is a space-partitioning data structure that is used to organize high-dimensional data items into several subsets. In a RP-tree, each subset is represented as one leaf node. Compared to other methods such as Kd-tree or K-means, the RP-tree has many good properties, including fast convergence speed and guaranteed `roundness' of leaf nodes~\cite{Dasgupta:2008,aman:nips:2010}. These properties are useful for generating compact LSH code and reducing the algorithm's performance and quality variance.
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/6/overview.pdf}
   \caption[Bi-level LSH framework]{\label{fig:6:overview} The framework for Bi-level LSH. The first level is the random projection tree. The second level is the hierarchical lattice for each RP-Tree leaf node. Both levels are parallelized utilizing the multiple cores on a GPU. }
@@ -218,7 +218,7 @@ An item's LSH code and leaf node index composes its Bi-level LSH code, i.e., $\t
 
 The LSH table is implemented as a linear array along with an indexing table. The linear array contains the Bi-level LSH codes of all the items in the dataset, which have been sorted to collect items with same LSH codes together. All the data items with the same LSH code constitute a bucket which is described by the start and end positions of the bucket in the sorted linear array. As each bucket uniquely corresponds to one LSH code, we can use the terminology `bucket' and `unique LSH code' in the same sense. The indexing table is a cuckoo hash table with each key corresponding to one LSH code; the value associated with each key is the corresponding bucket interval for the LSH code in the linear array. In practice, the key --- a dim-$M$ LSH code --- is compressed to a dim-1 key by using another hash function. The structure of the LSH hash table is shown in Figure~\ref{fig:6:hashtable}, which is implemented as a cuckoo hashing table on GPUs.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/6/hashtable.pdf}
   \caption[LSH hash table for Bi-level LSH]{\label{fig:6:hashtable} LSH hash table for Bi-level LSH: the linear array stores LSH codes and the indexing table is a cuckoo hash table, which stores unique LSH codes and the intervals for these codes in the linear array. Different colors are for items with different LSH hashing values.}
@@ -247,7 +247,7 @@ Given multiple queries and their candidate sets, we first compute the number of 
 that the global memory can store both the candidate sets and initial $k$-nearest neighbors. The initial $k$-nearest neighbors are empty or are the results from previous LSH tables (as introduced in Section~\ref{sec:6:related:basic}, there are $L$ LSH tables). We copy the initial sets and the candidate sets to the work queue and perform clustered-sort on the distances between the points in the work queue and the query points. Finally, we perform a compact operation to obtain updated $k$-nearest neighbor results. This process is repeated until all the candidates have been processed.
 
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/6/workqueue.pdf}
   \caption[Work-queue based parallel short-list search]{\label{fig:6:workqueue} Work-queue based parallel short-list search: different colors are for different queries. Clustered-sort collects the candidates for the same query together in ascending order of distance. Compact primitive computes the first $k$ elements for the reordered candidates, which have the smallest distance to the query. }
@@ -273,7 +273,7 @@ In this section, we compare the performance of our Bi-level LSH algorithm with p
 
 To evaluate our method, we use the LabelMe image dataset (\url{http://labelme.csail.mit.edu}), which includes nearly 2 million images, where each image is represented as a GIST feature of dimension 512. The Bi-level LSH can provide results with higher quality than prior LSH algorithms, given the same computational budget. We show one comparison result in Figure~\ref{fig:6:res:quality}. More comparison results are shown in~\cite{BilevelLSH2011}.
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/6/res/compare_L20_mh.pdf}
   \caption[Quality comparison between the Bi-level LSH and the standard LSH algorithm]{\label{fig:6:res:quality} Quality comparison between our Bi-level LSH and the standard LSH algorithm, where $M = 8$ and the RP-tree partitions the dataset into 16 groups in the first level. The ellipses show the standard variations in selectivity and recall/error ratio caused by random projections.}
@@ -290,7 +290,7 @@ We now compare the timing performance of two GPU approaches: the naive heap-sort
 
 Next, we compare the performance of the two approaches when the neighborhood size ($K$) changes. As shown in Figure~\ref{fig:6:res:workqueuecomp}(c)(d), unless $K$ is very small (5 or 50 in the example), the work-queue based method is much faster than the heap-sort method. When $K$ increases, the heap-sort method's time cost will increase super linearly with respect to $K$, while the work-queue based method takes nearly constant time. Figures~\ref{fig:6:res:workqueuecomp}(e) and (f) show the relative comparison between the two approaches when the bucket size ($W$) is large. Notice that the work-queue based method is faster than heap-sort method only when $K > 200$ or $K > 500$, respectively. The reason is that the work-queue based method needs additional memory to store the work queue, which is limited by the overall size of GPU memory. As a result, when $W$ is large, i.e., there are many candidates, we have to split the candidates into many parts so that each part can fit into the work queue. This will break one sorting computation on a work queue into multiple sorting computations, which could reduce the overall efficiency. However, for large $K$, the work-queue based method is still more efficient, which verifies our analysis in Section~\ref{sec:6:gpu:slsearch}.
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \subfloat[RP-tree CPU vs. GPU]{
     \centering
     \includegraphics[width=0.327\linewidth]{figs/6/res/rptree_t.pdf}}
@@ -304,14 +304,14 @@ Next, we compare the performance of the two approaches when the neighborhood siz
 \end{figure}
 
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/6/res/shortlist.pdf}
   \caption[Performance comparison on shortlist search used in Bi-level LSH]{\label{fig:6:res:shortlist} Performance comparison on shortlist search: training set size 100,000, testing set size 100,000, $K=500, L=10, M=8$. We vary $W$ to generate different numbers of shortlist candidates. We compare different methods: pure CPU (CPU-lshkit), GPU hash table with CPU short-list search (CPU-shortlist), and pure GPU (GPU).}
 \end{figure}
 
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \subfloat[]{
     \centering
     \includegraphics[width=0.327\linewidth]{figs/6/res/workqueue_query.pdf}}

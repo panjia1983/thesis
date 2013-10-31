@@ -71,7 +71,7 @@ where $a_{i,j}$ represents the $(i,j)$-th element of matrix $\mathbf A$.
 \subsection{Enhanced Motion Planner with Instance-based Learning}
 The goal of a motion planner is to compute a collision-free continuous path between the initial and goal configurations in $\Cspace$. The resulting path should lie completely in $\Cfree$ and should not intersect with $\Cobs$. As shown in Figure~\ref{fig:3:oracle}(a), sample-based planners learn about the connectivity of $\Cspace$ implicitly based on collision queries. Query results can also bias the sampling scheme of the planner via different heuristics (e.g., retraction rules).
 
-\begin{figure}[H]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.7\linewidth]{figs/3/oracle.pdf}
   \caption[Comparison between prior sample-based planners and planners enhanced by instance-based learning]{Use of collision detection in sample-based planners: (a) exact collision checking only and (b) our approach with exact and approximate collision checking. (a) The exact collision detection routine is the oracle used by the planner to gather information about $\Cfree$ and $\Cobs$. The planner performs binary collision queries, either on point configurations or $1$-dimensional local paths, and estimates the connectivity of $\Cfree$ (shown as Approximate $\Cfree$). Some planners utilize the in-collision results to bias sample generation by using different heuristics. (b) Our method also performs collision queries. However, we store all in-collision results (as Approximate $\Cobs$) and collision-free results (as Approximate $\Cfree$). Before performing an exact collision query, our algorithm performs a $\knn$ query on the given configuration or local path for computing a collision probability for each query. The collision probability can be used as a cost function to compute an efficient strategy for performing exact collision queries during motion planning. We use novel LSH-based algorithms to perform $\knn$ queries efficiently and to speed up the overall planner.}
@@ -162,7 +162,7 @@ We build on these prior results for point-point $\knn$ queries, and we present a
 
 Later in Section~\ref{sec:3:linelsh}, we discuss challenges in designing appropriate hash functions for line-point $\knn$ queries, and we derive LSH bounds for line-point $\knn$. We also address many challenges in extending our formulation to non-Euclidean metrics (e.g., in handling articulated models) and reducing the dimension of embedded space.
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \begin{center}
   \includegraphics[width=0.7\linewidth]{figs/3/KNN.pdf}
   \caption[Two types of $\knn$ queries used in instance-based learning]{Two types of $\knn$ queries used in our method: (a) point-point $\knn$ and (b) line-point $\knn$. $Q$ is the query item, and the results of different queries are shown as blue points in each figure. We present novel LSH-based algorithms for fast computation of these queries. (c) The line-point $\knn$ query is used to compute prior instances that can influence the collision status of a local path which connects $\mathbf x_1$ and $\mathbf x_2$ in $\Cspace$. The query line is the line segment between $\mathbf x_1$ and $\mathbf x_2$. The white points are prior collision-free samples in the dataset, and the black points are prior in-collision samples.   \label{fig:3:KNN}}
@@ -378,7 +378,7 @@ We apply two types of rejection rules~\cite{Dubuisson:1993:PR}: \emph{ambiguity 
 
 These two rejection rules are shown in Figure~\ref{fig:3:reject}. The rejection rules for a line query are analogous.
 
-\begin{figure}[H]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.45\linewidth]{figs/3/reject.pdf}
   \caption[Two rejection rules used in instance-based learning]{Two rejection rules: (a) ambiguity rejection: $Q$'s estimated collision probability is near $0.5$ or the variance for the estimate is large; (b) distance rejection: when $Q$ is far from all in-collision and collision-free database items.}
@@ -461,7 +461,7 @@ In Figure~\ref{fig:3:planners}(a), we show how our probabilistic culling strateg
 Note that the neighborhood search routine (\texttt{near}) can use the LSH-based point-point $\knn$ query. \texttt{icollide} is computed according to either Equation~\ref{eq:3:knnclassifier} or Equation~\ref{eq:3:knnclassifierline}.
 
 
-\begin{figure}[H]
+\begin{figure}[!h]
   \subfloat[I-PRM]{\fbox{\begin{minipage}{0.48\linewidth}
       \centering
       \scriptsize
@@ -626,7 +626,7 @@ We also analyze the accuracy of our learning-based collision status estimation a
 Since the learning-based planners use a `cold start', the acceleration results shown in Table~\ref{tab:3:compare} and Table~\ref{tab:3:compare2} show only a portion of the speedups that can be obtained using a learning-based framework. 
 As more collision queries are performed and their results are stored in the dataset, the resulting planner has more information about $\Cobs$ and $\Cfree$, so culling becomes more efficient. Ideally, culling would filter out all in-collision queries and obtain a high speedup. In practice, we do not achieve ideal speedups due to two reasons: 1) we only have a limited number of samples in the dataset; and 2) the overhead of the $\knn$ query increases as the dataset size increases. As a result, when we perform the global motion planning computation repeatedly, the planning time will first decrease, and then eventually increase. This phenomenon is shown in Figure~\ref{fig:3:curve}. To avoid such problems, we monitor the average planning time of the most recent planning queries, and to stop adding new data into the database when the average planning time starts to increase. The result of this strategy is shown in Figure~\ref{fig:3:curve2}. In practice, the memory consumed by our modified motion planners is about 2-3 times more than the original planners.
 
-\begin{figure}[h]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.24\linewidth]{figs/3/benchmark1.png}
   \includegraphics[width=0.24\linewidth]{figs/3/benchmark2.png}
@@ -635,7 +635,7 @@ As more collision queries are performed and their results are stored in the data
   \caption[PR2 planning benchmarks for instance-based learning]{\label{fig:3:benchmark} PR2 planning benchmarks: robot arms with different colors show the initial and goal configurations. The first three benchmarks are of the same environment, but the robot's arm must perform different actions: (a) move arm from under desk to above desk; (b) move arm from under desk to another position under desk; and (c) move arm from inside the box to outside the box. In the final benchmark, the robot tries to move its arm from under a shelf to above it. The order of difficulty of the four benchmarks is (c) $>$ (d) $>$ (b) $>$ (a). These planning problems are for PR2's $7$-DOF robot arm.}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.180\linewidth]{figs/3/apartment.png}
   \includegraphics[width=0.188\linewidth]{figs/3/cubicles.png}
@@ -646,7 +646,7 @@ As more collision queries are performed and their results are stored in the data
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/3/accuracy-crop.pdf}
   \caption[The accuracy of the instance-based learning framework on various benchmarks.]{\label{fig:3:accuracy} The accuracy result for the benchmark shown in Figure~\ref{fig:3:benchmark}(a). For databases of different sizes, we compute the average accuracy on $100$ point queries or local path queries. If an ambiguity rejection or a distance rejection happens for a query, we measure its accuracy as $0.5$ because no estimate is better than a random guess, and we in fact perform exact collision checking on such samples. This is why the accuracy is $0.5$ when the database is empty.}
@@ -655,7 +655,7 @@ As more collision queries are performed and their results are stored in the data
 
 
 
-\begin{table}[t]
+\begin{table}[!h]
 \begin{center}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{|c|c|c||c|c||c|c||c|c|}\hline
@@ -671,7 +671,7 @@ As more collision queries are performed and their results are stored in the data
 \end{center}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[!h]
 \begin{center}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{|c|c|c||c|c||c|c||c|c|}\hline
@@ -689,12 +689,12 @@ torus & 31.52/4.3 & 23.3/3.5 (39\%) & 4.16/0.91 & 2.75/0.88 (51\%) & 3.95/1.12 &
 \end{table}
 
 
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/3/curve1-crop.pdf}
   \caption[Time taken by I-PRM when it runs more than 100 times on the benchmark shown Figure~\ref{fig:3:benchmark}(a). The planning time first decreases and then increases because I-PRM continues updating the dataset in well-learned regions]{\label{fig:3:curve} The time taken by I-PRM when it runs more than 100 times on the benchmark shown in Figure~\ref{fig:3:benchmark}(a). The planning time of a single query first decreases and then increases. The best acceleration acquired is $12.78/7.5 = 70\%$, larger than the $32\%$ in Table~\ref{tab:3:compare}.}
 \end{figure}
-\begin{figure}[t]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/3/curve2-crop.pdf}
   \caption[Time taken by I-PRM when it runs more than 100 times on the benchmark shown Figure~\ref{fig:3:benchmark}(a). The planning time always decreases because I-PRM stops updating the dataset in well-learned regions]{\label{fig:3:curve2} The time taken by I-PRM when it runs more than 100 times on the benchmark shown in Figure~\ref{fig:3:benchmark}(a). In this experiment, we monitor the average planning time of the most recent $10$ queries and stop adding collision results into the database when average planning time increases. Since the database size does not change after about the $60$-th query, the system does not suffer from the increase in the planning time. }

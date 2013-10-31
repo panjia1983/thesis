@@ -91,7 +91,7 @@ Parts of the PRM algorithm, such as the collision queries, are embarrassingly pa
 
 The resulting GPU-based framework is very efficient for a multi-query version of the planning problem. The most expensive step in this computation is the local planning algorithm; thus, we use new collision detection algorithms to improve its performance. In order to accelerate the single-query algorithm, we introduce a solution that uses a lazy strategy and defers collision checking for local planning. In other words, the algorithm connects all the edges corresponding to the nearest neighbors and searches for paths between the initial and final configurations. After that, it performs local planning on the edges that constitute these paths.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.9\linewidth]{figs/4/algorithm_overview.pdf}
   \caption[An overview of serial PRM and the GPU-based planner]{PRM overview and parallel components in our algorithm}
@@ -157,7 +157,7 @@ In this section, we present details of our implementation and evaluate the perfo
 
 Our algorithm is designed to work well on any massively processor- and data-parallel architecture by using vector parallelism and low synchronization overhead. In this regard, both NVIDIA and ATI (as well as Intel's Larrabee processor) are relatively similar. We used CUDA since it was the most stable development platform at the moment, but look forward to testing in OpenCL and comparing across architectures.
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.9\linewidth]{figs/4/benchmarks.png}
   \caption[Benchmark scenes used for the GPU-based planner]{The benchmark scenes used for our algorithms in the following order: piano (2484 triangles), helicopter (2484 triangles), maze3d1 (40 triangles), maze3d2 (40 triangles), maze3d3 (970 triangles), and alpha puzzle (2016 triangles).}
@@ -172,7 +172,7 @@ Figure~\ref{fig:4:breakdown} shows the timing breakdown between various steps fo
 
 We test the scalability of G-PRM and GL-PRM on the \emph{maze3d3} benchmark and the result is shown in Figure~\ref{fig:4:scalability}. It is obvious that GL-PRM is generally faster than G-PRM, and both algorithms achieve near-linear scaling on the benchmark. However, observe that as the number of samples increases, GL-PRM slows down faster than G-PRM. This is because when the number of samples increases, proximity computation becomes increasingly expensive and dominates the timing when the number of samples is near $1$ million.
 
-\begin{table}[htb]
+\begin{table}[!htb]
 \begin{center}
 \begin{small}
 \begin{tabular}{|c|c|c|c|c|c|} \hline
@@ -189,7 +189,7 @@ alpha1.5       & 65.73s  &   2.8s   &    12.86s  &   1.446s      \\ \hline
 \caption[Performance comparison between the PRM and RRT implementations in OOPSMP and the GPU-based planner]{The left two columns evaluate the performance of the PRM and RRT algorithms in the OOPSMP. The right two columns evaluate the performance of our GPU-based algorithms.}\label{tab:4:complexity}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.9\linewidth]{figs/4/breakdown.pdf}
   \caption[Split-up of timings for the GPU-based planner]{Split-up of timings: the fraction of time spent in different parts of the G-PRM and GL-PRM.}
