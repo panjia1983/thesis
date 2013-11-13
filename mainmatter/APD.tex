@@ -412,7 +412,7 @@ when using $\LCS$ to compute the PD for a random configuration in $\Cspace$:
 \label{eq:2:Errdef} e_{\text{PD}} = \mathbb E
 \left|\overline{\text{PD}}(A(\q), B) - \text{PD}(A(\q), B)\right|.
 \end{equation}
-Note that we scale the objects such that the maximum dimension of the subspace $\Cobs (BV(A),BV(B))$ is equal to 1.
+We scale the objects such that the maximum dimension of the subspace $\Cobs (BV(A),BV(B))$ is equal to 1.
 The accuracies of approximate global PD and approximate contact space are closely related: a small value of $e_{\text{col}}$ implies a small value of $e_{\text{PD}}$ and vice versa.
 
 \begin{figure}[!h]
@@ -592,6 +592,23 @@ two complex benchmarks (Figure~\ref{fig:2:demo}): (1) angry bird characters fall
 The convex decomposition results in $17$, $30$, and $32$ convex pieces for the BigRedBird, WhiteBird and GreenPig models, respectively. The Nazca spider is decomposed into $77$ convex pieces. We observed an improvement in PD querying of nearly a factor of $20$ when using our active learning algorithm, compared to
 techniques based on convex decomposition used in Box2D (see Figure~\ref{fig:2:performancecomparison}(a)(b)). The collision response algorithm is based on the Box2D implementation.
 
+\begin{figure}[!h]
+\centering
+\parbox{0.9\linewidth}{%
+ \subfloat[]{\includegraphics[height=0.605\linewidth]{figs/2/demo/Box2D/Box2DAngryBird_2013_5_14.png}}
+ \subfloat[]{\includegraphics[height=0.605\linewidth]{figs/2/demo/Bullet/BulletRainfall.png}}
+}
+\parbox{0.85\linewidth}{%
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/star_spoon.png}}
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/cup_spoon.png}}
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/teeth.png}}\\
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/bunny_bunny.png}}
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/dragon_dragon.png}}
+  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/buddha_buddha20K.png}}
+}
+\caption[Learning-based PD computation algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects]{Our algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects. (a) Dynamic simulation of angry bird characters falling into a complex chute in the Box2D physics engine; (b) rainfall of $1,000$ rings in the Bullet physics engine; (c) a star and a spoon; (d) a spoon and a cup; (e) multiple contacts between upper and lower teeth (each has more than $40,000$ triangles). (f-h) benchmarks consisting of complex models (bunny, dragon and Buddha models have $70K$, $230K$ and $1M$ triangles, respectively). For each pair of overlapping objects, our PD algorithm takes less than $0.1\sim2$ milliseconds, with less than 2-3\% relative error.}\label{fig:2:demo}
+\end{figure}
+
 
 \textbf{Bullet} uses PD computation to handle penetrations in their constraint-based solver.
 We demonstrate the benefits of our PD computation algorithm in three scenarios (shown in Figure~\ref{fig:2:demo}):
@@ -638,6 +655,7 @@ For generalized PD, the ground truth PD computation is even harder. Therefore, w
 In practice, our approach is more than an order of magnitude faster than other algorithms that are based on convex decomposition (e.g., \cite{Kim:2002:FPD} for $\PDt$; \cite{Zhang:2007:GPD} for $\PDg$) or point-based approximations. We have compared the runtime performance of our algorithm with these prior global methods in Figure~\ref{fig:2:performancecomparison}. 
 
 
+
 \subsection{Comparison with Prior Methods}
 Many existing algorithms perform local analysis of intersection regions and
 compute local PD. Other techniques use distance fields and can be accelerated using GPUs. In practice, these techniques are fast and also handle
@@ -652,6 +670,49 @@ error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{
 However, compared to our method, these optimization-based algorithms have several advantages. First, they require no pre-computation and can be applied to environments with many obstacles. Our method's dependence on pre-computation limits its application.
 Moreover, if suitable initial guesses are chosen for local optimization, optimization-based PD algorithms such as~\cite{Tang:IGP:2013} may provide better results than our method on generalized PD computation involving rotations, especially for queries with small penetration depths.
 This is due to some issues of our approach related to the use of sampling-based approaches and the design of configuration space metrics (more details in Section~\ref{sec:2:discussion}).
+
+
+\begin{table}[!ht]
+  \centering
+  \rowcolors{1}{gray!25}{}
+  \resizebox{\linewidth}{!}{%
+    \begin{tabular}{|c|r|r|r|r|r|r|r|r|r|r|r|r|r|r|}
+    \hline
+    \multicolumn{2}{|c|}{\multirow{3}{*}{Model}} & \multicolumn{8}{c|}{Offline Learning  \LCS} & \multicolumn{5}{c|}{Runtime Query}\\
+    \cline{3-15}
+    \multicolumn{2}{|c|}{} & \multicolumn{2}{c|}{Initial Learning} & \multicolumn{4}{c|}{Active Learning} & \multicolumn{1}{c|}{\multirow{2}{*}{total (s)}} & \multicolumn{1}{c|}{\multirow{2}{*}{mem}} & \multicolumn{4}{c|}{time (ms)} & \multicolumn{1}{c|}{\multirow{2}{*}{$e_{\text{PD}}$(\%)}}\\
+    \cline{3-8} \cline{3-8} \cline{11-14}
+    \multicolumn{2}{|c|}{} & \#smpls & time (s) & \#smpls & $|S|$ & $e_{\text{col}}$ (\%) & time (s) & \multicolumn{1}{c|}{}& \multicolumn{1}{c|}{}&  NN & projection & refine & total & \multicolumn{1}{c|}{}\\
+    \hline \hline
+    \multicolumn{1}{|c|}{\multirow{3}{*}{2D $\PDt$}} & star vs. room & 100   & 0.006 & 1000 & 374   & 1.88 & 0.15  & 0.156 &  4.4  & 0.065 & 0.02 & 0.03 & 0.115 & 0.023\\
+    \multicolumn{1}{|c|}{} & monkeys & 100   & 0.4   & 1000 & 346   & 0.11 & 2.74  & 3.14 &  4.2  & 0.06 & 0.01 & 0.03   & 0.10 & 0.008 \\
+    \multicolumn{1}{|c|}{} & spiders & 100   & 0.01  & 1000 & 389   & 1.37 & 0.27  & 0.28 &  4.7  & 0.066 & 0.01 &  0.02  & 0.096 & 0.025 \\ \hline
+    \multicolumn{1}{|c|}{\multirow{3}{*}{3D $\PDt$}} & star vs. spoon & 1000  & 0.08  & 10000 & 1105  & 0.59 & 1.245 &  1.33 &  17  & 0.43 & 0.21 & 0.02  & 0.66 & 0.012\\
+    \multicolumn{1}{|c|}{} & cup vs. spoon & 1000  & 0.25  & 10000 & 1472  & 0.75 & 4.46 & 4.81 &   23  & 0.54 & 0.22 &  0.03  & 0.79 & 0.019 \\
+    \multicolumn{1}{|c|}{} & rings & 1000  &  0.20 & 10000 & 1224  & 0.56 & 11.99 & 12.01 & 19    & 0.66 & 0.12 &  0.05   &  0.83 & 0.016 \\
+    \multicolumn{1}{|c|}{} & teeth  & 1000  &  0.33 & 10000 & 2132  & 1.3 & 43.21 & 43.54 &  34   & 1.3 & 0.2 &  0.08  &  1.58 & N/A \\
+    \multicolumn{1}{|c|}{} & bunnies  & 1000  &  0.15 & 10000 & 666  & 1.7 & 36.49 & 36.64 &   11    & 0.1 & 0.12 &  0.04  & 0.26 & 2.0 \\
+    \multicolumn{1}{|c|}{} & dragons  & 1000  &  0.17 & 10000 & 854  & 1.8 & 31.11 & 31.28 &   14    & 0.13 & 0.11 &  0.05  &  0.29 & 1.9 \\
+    \multicolumn{1}{|c|}{} & Buddha  & 1000  &  1.7 & 10000 & 1384  & 1.8 & 37 & 38 &   22    & 0.18 & 0.10 &  0.09  &  0.37 & 1.8 \\
+    \hline \hline
+    \multicolumn{1}{|c|}{\multirow{3}{*}{2D $\PDg$}} & star vs. room &  100   & 0.005 & 2000 & 436  & 2.0 & 1.276 & 1.281 &  6.9   & 0.08 & 0.03 &  0.02    & 0.13 & 0.021\\
+    \multicolumn{1}{|c|}{} & monkeys & 100 & 0.42   &  2000 & 545   & 0.43 &  5.84 &  6.26 &    8.7    & 0.07 & 0.02  & 0.02  & 0.11 & 0.013 \\
+    \multicolumn{1}{|c|}{} & spiders & 100 & 0.011 & 2000   & 540  &  0.8 &  1.16 & 1.17 &   8.6   & 0.08 & 0.02 &   0.01   & 0.11 & 0.018 \\ \hline
+    \multicolumn{1}{|c|}{\multirow{3}{*}{3D $\PDg$}} & star vs. spoon &  1000 & 0.095  & 10000  & 1731  & 1.9 & 37.49 & 37.58 &  48   &0.5 & 0.25 &  0.05  & 0.80 & N/A \\
+    \multicolumn{1}{|c|}{} & cup vs. spoon & 1000 & 0.3  & 10000   &  2107  & 1.2  &  78.34 & 78.64 &  59   & 0.3& 1.0 & 0.03  &  1.33 & N/A \\
+    \multicolumn{1}{|c|}{} & rings & 1000  & 0.25  & 10000   &  1977  &  1.3  &  223.1 & 223.4 &   55    & 0.82 & 0.21 &   0.03  & 1.06 & N/A \\
+    \multicolumn{1}{|c|}{} & teeth  & 1000  &  0.54 & 10000 & 3216  & 2.8 & 476.43 & 476.97 &   90      & 2.2 & 0.2 & 0.04  &  2.44 & N/A \\
+    \multicolumn{1}{|c|}{} & bunnies  & 1000  &  0.33 & 10000 & 2283  & 3.1 & 342.31 & 342.64 &   64     & 0.89 & 0.12 & 0.02  &  1.03 & N/A \\
+    \multicolumn{1}{|c|}{} & dragons  & 1000  &  0.37 & 10000 & 2387  & 2.8 & 378.92 & 477.29 &   69     & 1.01 & 0.18 & 0.03  &  1.22 & N/A \\
+    \multicolumn{1}{|c|}{} & Buddha  & 1000  &  2.3 & 10000 & 3765  & 2.7 & 643 & 645 &   105     & 1.20 & 0.28 & 0.07  &  1.55 & N/A \\
+    \hline
+    \end{tabular}
+}
+  \caption[Performance of the learning-based PD algorithm on 2D and 3D models]{
+Performance of our PD algorithm on 2D and 3D models: The learning phase includes the number of samples, size of support vectors, final memory usage (KB), and precomputation time.
+We also give a timing breakdown of runtime queries. The PD error is computed by comparing the accuracy of $\overline{\text{PD}}$ with prior algorithms used for PD computations. For accurate $\PDt$ computation, we use the accurate, offline algorithm of~\protect \cite{Lien:2009:ASM} or use a combination of convex decomposition and Minkowski sums.   Since no accurate and efficient algorithms are known for many PD queries (e.g., $\PDt$ computation for non-closed meshes like teeth model; $\PDg$ computation for 3D models), we do not analyze the accuracy of our algorithm in such cases (shown as N/A). }\label{tab:2:learningperformance}
+\end{table}
+
 
 Existing algorithms either locally analyze intersection regions or use distance fields to compute local PD. In practice, these techniques are computationally efficient and are capable of handling deformable models but only compute local PD. In contrast, our global PD algorithm computes global translational and rotational PD, which provides a more reliable measure of separating two overlapping objects. It should be noted that our algorithm requires preprocessing and is mainly designed for rigid objects. The performance of our runtime query (about $0.1\sim2$ milliseconds) is comparable to or faster than prior local PD algorithms. Other algorithms reduce PD computation to constrained optimization~\cite{Nawratil:2009:GPD,Zhang:2007:AFP,Je:2012:PRP,Tang:IGP:2013} in which a sequence of configuration samples on the contact space are iteratively computed until a local minimum configuration is found. The performance of these algorithms heavily relies on the initial guess of the local optimization, and it is hard to provide error bounds in terms of global PD (see Figure~\ref{fig:2:bunnymodels} and~\ref{fig:2:dragonmodels}). These techniques require no pre-computation and can be applied to environments with many obstacles but the solution heavily depends on the initial guess. If suitable initial guesses are chosen, optimization-based PD algorithms such as~\cite{Tang:IGP:2013} may provide better results than our method on generalized PD computation involving rotations, especially for queries with small penetration depths. This is due to some issues of our approach related to the use of sampling-based approaches and the design of configuration space metrics (more details in Section~\ref{sec:2:discussion}).
 
@@ -857,64 +918,7 @@ It would also be useful to extend the approach to articulated models that take i
 In order to handle deformable models, we aim to develop incremental techniques that can refine the contact
 space approximation for deforming objects. It would be useful to apply this approach for other PD formulations, such as penetration volume~\cite{Weller-RSS-09}, which can result in continuous response forces. We also need improved algorithms for collision response that can guarantee collision-free simulations for interactive applications.
 
-\begin{figure}[!h]
-\centering
-\parbox{0.9\linewidth}{%
- \subfloat[]{\includegraphics[height=0.605\linewidth]{figs/2/demo/Box2D/Box2DAngryBird_2013_5_14.png}}
- \subfloat[]{\includegraphics[height=0.605\linewidth]{figs/2/demo/Bullet/BulletRainfall.png}}
-}
-\parbox{0.85\linewidth}{%
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/star_spoon.png}}
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/cup_spoon.png}}
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/teeth.png}}\\
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/bunny_bunny.png}}
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/dragon_dragon.png}}
-  \subfloat[]{\includegraphics[width=0.325\linewidth]{figs/2/demo/buddha_buddha20K.png}}
-}
-\caption[Learning-based PD computation algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects]{Our algorithm computes a global penetration depth between overlapping non-convex and non-manifold objects. (a) Dynamic simulation of angry bird characters falling into a complex chute in the Box2D physics engine; (b) rainfall of $1,000$ rings in the Bullet physics engine; (c) a star and a spoon; (d) a spoon and a cup; (e) multiple contacts between upper and lower teeth (each has more than $40,000$ triangles). (f-h) benchmarks consisting of complex models (bunny, dragon and Buddha models have $70K$, $230K$ and $1M$ triangles, respectively). For each pair of overlapping objects, our PD algorithm takes less than $0.1\sim2$ milliseconds, with less than 2-3\% relative error.}\label{fig:2:demo}
-\end{figure}
 
-
-\begin{table}[!h]
-  \centering
-  \rowcolors{1}{gray!25}{}
-  \resizebox{\linewidth}{!}{%
-    \begin{tabular}{|c|r|r|r|r|r|r|r|r|r|r|r|r|r|r|}
-    \hline
-    \multicolumn{2}{|c|}{\multirow{3}{*}{Model}} & \multicolumn{8}{c|}{Offline Learning  \LCS} & \multicolumn{5}{c|}{Runtime Query}\\
-    \cline{3-15}
-    \multicolumn{2}{|c|}{} & \multicolumn{2}{c|}{Initial Learning} & \multicolumn{4}{c|}{Active Learning} & \multicolumn{1}{c|}{\multirow{2}{*}{total (s)}} & \multicolumn{1}{c|}{\multirow{2}{*}{mem}} & \multicolumn{4}{c|}{time (ms)} & \multicolumn{1}{c|}{\multirow{2}{*}{$e_{\text{PD}}$(\%)}}\\
-    \cline{3-8} \cline{3-8} \cline{11-14}
-    \multicolumn{2}{|c|}{} & \#smpls & time (s) & \#smpls & $|S|$ & $e_{\text{col}}$ (\%) & time (s) & \multicolumn{1}{c|}{}& \multicolumn{1}{c|}{}&  NN & projection & refine & total & \multicolumn{1}{c|}{}\\
-    \hline \hline
-    \multicolumn{1}{|c|}{\multirow{3}{*}{2D $\PDt$}} & star vs. room & 100   & 0.006 & 1000 & 374   & 1.88 & 0.15  & 0.156 &  4.4  & 0.065 & 0.02 & 0.03 & 0.115 & 0.023\\
-    \multicolumn{1}{|c|}{} & monkeys & 100   & 0.4   & 1000 & 346   & 0.11 & 2.74  & 3.14 &  4.2  & 0.06 & 0.01 & 0.03   & 0.10 & 0.008 \\
-    \multicolumn{1}{|c|}{} & spiders & 100   & 0.01  & 1000 & 389   & 1.37 & 0.27  & 0.28 &  4.7  & 0.066 & 0.01 &  0.02  & 0.096 & 0.025 \\ \hline
-    \multicolumn{1}{|c|}{\multirow{3}{*}{3D $\PDt$}} & star vs. spoon & 1000  & 0.08  & 10000 & 1105  & 0.59 & 1.245 &  1.33 &  17  & 0.43 & 0.21 & 0.02  & 0.66 & 0.012\\
-    \multicolumn{1}{|c|}{} & cup vs. spoon & 1000  & 0.25  & 10000 & 1472  & 0.75 & 4.46 & 4.81 &   23  & 0.54 & 0.22 &  0.03  & 0.79 & 0.019 \\
-    \multicolumn{1}{|c|}{} & rings & 1000  &  0.20 & 10000 & 1224  & 0.56 & 11.99 & 12.01 & 19    & 0.66 & 0.12 &  0.05   &  0.83 & 0.016 \\
-    \multicolumn{1}{|c|}{} & teeth  & 1000  &  0.33 & 10000 & 2132  & 1.3 & 43.21 & 43.54 &  34   & 1.3 & 0.2 &  0.08  &  1.58 & N/A \\
-    \multicolumn{1}{|c|}{} & bunnies  & 1000  &  0.15 & 10000 & 666  & 1.7 & 36.49 & 36.64 &   11    & 0.1 & 0.12 &  0.04  & 0.26 & 2.0 \\
-    \multicolumn{1}{|c|}{} & dragons  & 1000  &  0.17 & 10000 & 854  & 1.8 & 31.11 & 31.28 &   14    & 0.13 & 0.11 &  0.05  &  0.29 & 1.9 \\
-    \multicolumn{1}{|c|}{} & Buddha  & 1000  &  1.7 & 10000 & 1384  & 1.8 & 37 & 38 &   22    & 0.18 & 0.10 &  0.09  &  0.37 & 1.8 \\
-    \hline \hline
-    \multicolumn{1}{|c|}{\multirow{3}{*}{2D $\PDg$}} & star vs. room &  100   & 0.005 & 2000 & 436  & 2.0 & 1.276 & 1.281 &  6.9   & 0.08 & 0.03 &  0.02    & 0.13 & 0.021\\
-    \multicolumn{1}{|c|}{} & monkeys & 100 & 0.42   &  2000 & 545   & 0.43 &  5.84 &  6.26 &    8.7    & 0.07 & 0.02  & 0.02  & 0.11 & 0.013 \\
-    \multicolumn{1}{|c|}{} & spiders & 100 & 0.011 & 2000   & 540  &  0.8 &  1.16 & 1.17 &   8.6   & 0.08 & 0.02 &   0.01   & 0.11 & 0.018 \\ \hline
-    \multicolumn{1}{|c|}{\multirow{3}{*}{3D $\PDg$}} & star vs. spoon &  1000 & 0.095  & 10000  & 1731  & 1.9 & 37.49 & 37.58 &  48   &0.5 & 0.25 &  0.05  & 0.80 & N/A \\
-    \multicolumn{1}{|c|}{} & cup vs. spoon & 1000 & 0.3  & 10000   &  2107  & 1.2  &  78.34 & 78.64 &  59   & 0.3& 1.0 & 0.03  &  1.33 & N/A \\
-    \multicolumn{1}{|c|}{} & rings & 1000  & 0.25  & 10000   &  1977  &  1.3  &  223.1 & 223.4 &   55    & 0.82 & 0.21 &   0.03  & 1.06 & N/A \\
-    \multicolumn{1}{|c|}{} & teeth  & 1000  &  0.54 & 10000 & 3216  & 2.8 & 476.43 & 476.97 &   90      & 2.2 & 0.2 & 0.04  &  2.44 & N/A \\
-    \multicolumn{1}{|c|}{} & bunnies  & 1000  &  0.33 & 10000 & 2283  & 3.1 & 342.31 & 342.64 &   64     & 0.89 & 0.12 & 0.02  &  1.03 & N/A \\
-    \multicolumn{1}{|c|}{} & dragons  & 1000  &  0.37 & 10000 & 2387  & 2.8 & 378.92 & 477.29 &   69     & 1.01 & 0.18 & 0.03  &  1.22 & N/A \\
-    \multicolumn{1}{|c|}{} & Buddha  & 1000  &  2.3 & 10000 & 3765  & 2.7 & 643 & 645 &   105     & 1.20 & 0.28 & 0.07  &  1.55 & N/A \\
-    \hline
-    \end{tabular}
-}
-  \caption[Performance of the learning-based PD algorithm on 2D and 3D models]{
-Performance of our PD algorithm on 2D and 3D models: The learning phase includes the number of samples, size of support vectors, final memory usage (KB), and precomputation time.
-We also give a timing breakdown of runtime queries. The PD error is computed by comparing the accuracy of $\overline{\text{PD}}$ with prior algorithms used for PD computations. For accurate $\PDt$ computation, we use the accurate, offline algorithm of~\protect \cite{Lien:2009:ASM} or use a combination of convex decomposition and Minkowski sums.   Since no accurate and efficient algorithms are known for many PD queries (e.g., $\PDt$ computation for non-closed meshes like teeth model; $\PDg$ computation for 3D models), we do not analyze the accuracy of our algorithm in such cases (shown as N/A). }\label{tab:2:learningperformance}
-\end{table}
 
 
 
