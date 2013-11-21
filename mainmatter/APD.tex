@@ -1,4 +1,5 @@
-\chapter{Configuration Space Approximation \mbox{using} Active Learning} 
+\chapter[C-SPACE APPROXIMATION USING ACTIVE LEARNING]
+{CHAPTER 2: C-SPACE APPROXIMATION \\ USING ACTIVE LEARNING}
 \label{chp:APD}
 
 \section{Introduction}
@@ -752,7 +753,7 @@ Our algorithm attempts to compute a global representation for the contact space,
 
 When learning the structure of the contact space in the $\SEcubic$ configuration space, we convert every configuration into a vector in the Euclidean space: for the rotation component of each configuration, we either convert it into a $3$-dimensional vector corresponding to the Euler angles, or into a $4$-dimensional vector corresponding to a quaternion. Given the vector representation of each configuration, we then perform the learning algorithm directly in the Euclidean space. However, $\SEcubic$ in fact is a Lie group and the Euclidean space approximation is only valid locally around each configuration. More formally, the Euclidean space locally approximates the Lie algebra element $\exp(\mathbf q)$ of a given configuration $\mathbf q \in \SEcubic$, where $\exp$ is the exponential map from $\SEcubic$ to its corresponding Lie algebra $\mathfrak{se}(3)$~\cite{Murray:1994:MIR}. This assumption might not hold for computing contact spaces with significant rotation components. In order to learn the non-Euclidean contact space precisely, one possible solution is to directly use learning algorithms on Lie groups~\cite{Tuzel:2008:LLG}.
 
-\section{Discussion: Discrete Sampling, $\Cspace$ Metrics and Optimization Techniques}
+\section{Discrete Sampling, $\Cspace$ Metrics and Optimization}
 \label{sec:2:discussion}
 
 There are three main factors that influence the accuracy of penetration depth values computed by our approach: discrete sampling, $\Cspace$ metrics, and the choice of optimization technique. Since these three factors are closely related to each other, we first discuss each factor in isolation and then use examples to show how a combination of these factors influences the $\PDg$ computation. 
@@ -828,7 +829,7 @@ In the second example (Figure~\ref{fig:2:toybenchmark}(b)), the moving object on
 Based on above experiments on two examples, we provide a detailed analysis about our PD algorithm's problem related to configuration space metrics, sampling-based techniques and global optimization. These examples each only use a few samples in the configuration space. However, the phenomenon we observed will also explain our method's behavior when more samples are provided, because for a $6$-dimensional configuration space $\SEcubic$, even one million samples do not adequately cover the entire configuration space. Thus, the issues observed from these examples are essential to our learning-based PD framework.
 
 
-\section{Discussion: Accuracy Comparison with Optimization-based PD Approaches}
+\section{Accuracy Comparison with Optimization-based PD Approaches}
 
 In order to better analyze the key issues of our learning-based framework with $\PDt$ and $\PDg$ computation, we put together four benchmarks as shown in Figure~\ref{fig:2:analysis_benchmark}. In two of these benchmarks (Figures~\ref{fig:2:analysis_benchmark}(a) and (b)), objects are not rotating. In the other two benchmarks (Figure~\ref{fig:2:analysis_benchmark}(c) and (d)), objects are translating and rotating. The benchmarks shown in Figures~\ref{fig:2:analysis_benchmark} (a), (b) and (c) are chosen so that we can compute the ground truth for penetration depths in these benchmarks. 
 

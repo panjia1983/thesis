@@ -12,6 +12,15 @@
 \renewcommand{\cftchappagefont}{\normalfont}
 \renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
 
+\newlength\mylen
+\renewcommand\cftchappresnum{CHAPTER }
+\settowidth\mylen{\cftchappresnum\cftchapaftersnum}
+\addtolength\cftchapnumwidth{\mylen}
+\renewcommand\cftchapaftersnum{:}
+
+
+
+
 \setlength{\cftbeforechapskip}{15pt}
 \setlength{\cftbeforesecskip}{10pt}
 \setlength{\cftbeforesubsecskip}{10pt}

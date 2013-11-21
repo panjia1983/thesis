@@ -51,6 +51,7 @@
 \usepackage{pdflscape}
 \usepackage{rotating}
 
+\usepackage{tocloft,calc}
 
 % page floats
 \usepackage{afterpage}
@@ -68,7 +69,9 @@
 \usepackage{color}
 
 % Center chapter titles, omit page numbers.
-\titleformat{\chapter}[display]{\fillast\bfseries}{\Large\MakeUppercase{\chaptertitlename} \thechapter}{-11pt}{\huge\singlespacing}[\thispagestyle{empty}]
+
+\titleformat{\chapter}{\fillast\bfseries}{}{0em}{\Large}[\thispagestyle{empty}]
+
 
 % extend to 2in top margins, leave 22pts = 2x font size after heading
 \titlespacing{\chapter}{0in}{0.62in}{22pt}
