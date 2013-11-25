@@ -70,11 +70,16 @@
 
 % Center chapter titles, omit page numbers.
 
-\titleformat{\chapter}{\fillast\bfseries}{}{0em}{\Large}[\thispagestyle{empty}]
+\titleformat{\chapter}{\fillast\bfseries}{}{0em}{}[\thispagestyle{empty}]
 
 
 % extend to 2in top margins, leave 22pts = 2x font size after heading
 \titlespacing{\chapter}{0in}{0.62in}{22pt}
+
+\titleformat{\section}
+  {\normalfont\fontsize{11}{11}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{11}{11}\bfseries}{\thesubsection}{1em}{}
 
 % indent paragraphs four spaces throughout the thesis/dissertation.
 \setlength{\parindent}{4ex}
